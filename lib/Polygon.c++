@@ -75,6 +75,53 @@ void Polygon::rotateBy( double r )
     origin.x = max( -x, origin.x );
     origin.y = max( -y, origin.y );
   }
-
+  
   offsetBy(origin);
+}
+
+Vertex Polygon::computeOffset( double r )
+{
+  double pi = 3.14159265358979;
+
+  r *= pi / 180.0;
+
+  double px = -1000000, py = -1000000, bx = -1000000, by = -1000000;
+
+  double xRange[2] = {1000000000,-1000000000};
+  double yRange[2] = {1000000000,-1000000000};
+
+  for( int i = 0; i < vertices.size(); ++i )
+  {
+    double x = vertices[i].x * cos( r ) - vertices[i].y * sin( r );
+    double y = vertices[i].x * sin( r ) + vertices[i].y * cos( r );
+
+    xRange[0] = min(vertices[i].x,xRange[0]);
+    xRange[1] = max(vertices[i].x,xRange[1]);
+
+    yRange[0] = min(vertices[i].y,yRange[0]);
+    yRange[1] = max(vertices[i].y,yRange[1]);
+
+    px = max( -x, px );
+    py = max( -y, py );
+  }
+
+  for( int i = 0; i < 2; ++i )
+  {
+    xRange[i] -= xRange[0];
+    yRange[i] -= yRange[0];
+  }
+
+  for( int i = 0; i < 2; ++i )
+  { 
+    for( int j = 0; j < 2; ++j )
+    {
+      double x = xRange[j] * cos( r ) - yRange[i] * sin( r );
+      double y = xRange[j] * sin( r ) + yRange[i] * cos( r );
+
+      bx = max( -x, bx );
+      by = max( -y, by );
+    }
+  }
+
+  return Vertex( px - bx, py - by );
 }

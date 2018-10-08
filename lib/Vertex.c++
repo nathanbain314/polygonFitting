@@ -35,7 +35,7 @@ Vertex Vertex::offset( double _x, double _y )
   return Vertex( x + _x, y + _y );
 }
 
-Vertex Vertex::offset( Vertex &v )
+Vertex Vertex::offset( Vertex v )
 {
   return Vertex( x + v.x, y + v.y );;
 }

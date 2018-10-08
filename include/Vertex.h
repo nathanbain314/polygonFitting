@@ -38,5 +38,5 @@ public:
 
   Vertex offset( double _x, double _y );
 
-  Vertex offset( Vertex &v );
+  Vertex offset( Vertex v );
 };

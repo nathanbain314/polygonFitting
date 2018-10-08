@@ -27,4 +27,6 @@ public:
   void offsetBy( Vertex offset );
 
   void rotateBy( double r );
+
+  Vertex computeOffset( double r );
 };

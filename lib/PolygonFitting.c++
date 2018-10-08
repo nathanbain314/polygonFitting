@@ -34,46 +34,11 @@ void PolygonFitting::createOffsetEdges( Polygon &P, Polygon &R )
 {
   for( int j = 0; j < R.vertices.size(); ++j )
   {
-    for( int i = 0; i < P.edges.size(); ++i )
+    Vertex offset = R.vertices[j];
+
+    for( int i = 0; i < P.vertices.size(); ++i )
     {
-      Vertex v1 = P.vertices[ P.edges[i].v1 ];
-      Vertex v2 = P.vertices[ P.edges[i].v2 ];
-      Vertex offset = R.vertices[j];
-
-      v1 = v1.offset( offset );
-      v2 = v2.offset( offset );
-
-      int v1Index = -1, v2Index = -1;
-
-      vector< Vertex >::iterator vertexIterator;
-
-      // Find position of v1 if it already exists
-      vertexIterator = find(vertices.begin(),vertices.end(),v1);
-
-      if( vertexIterator != vertices.end() )
-      {
-        v1Index = vertexIterator - vertices.begin();
-      }
-      else
-      {
-        v1Index = vertices.size();
-        vertices.push_back( v1 );
-      }
-
-      // Find position of v2 if it already exists
-      vertexIterator = find(vertices.begin(),vertices.end(),v2);
-
-      if( vertexIterator != vertices.end() )
-      {
-        v2Index = vertexIterator - vertices.begin();
-      }
-      else
-      {
-        v2Index = vertices.size();
-        vertices.push_back( v2 );
-      }
-
-      edges.push_back( Edge( v1Index, v2Index ) );
+      vertices.push_back( P.vertices[ i ].offset( offset ) );
     }
   }
 }
@@ -211,12 +176,11 @@ void PolygonFitting::computeContributingEdges()
 
   contributingEdges = grahamScan( vertices );
 
-  for( int i = 0; i < contributingEdges.size(); ++i )
+  for( int i = contributingEdges.size()-1; i >= 0; --i )
   {
-    if( find(edges.begin(),edges.end(),contributingEdges[i]) != edges.end() || find(edges.begin(),edges.end(),reverseEdge(contributingEdges[i])) != edges.end() )
+    if( contributingEdges[i].v1 / P.vertices.size() == contributingEdges[i].v2 / P.vertices.size() )
     {
       contributingEdges.erase(contributingEdges.begin() + i);
-      --i;
     }
   }
 
@@ -326,11 +290,23 @@ double intersectionEdges( Vertex v1, Vertex v2, Vertex v3, Vertex v4, Vertex v5,
   return result / denominator3;
 }
 
+
+struct Cmp
+{
+    bool operator ()(const pair< int, double> &a, const pair< int, double> &b)
+    {
+        return a.second < b.second;
+    }
+};
+
+
 bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
 {
   bool isNewBestScale = false;
 
   vector< Vertex > edgeOffsets;
+  vector< int > validEdges;
+  vector< tuple< int, int, int > > connectingEdges;
 
   for( int i = 0; i < contributingEdges.size(); ++i )
   {
@@ -338,67 +314,124 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
     Vertex v2 = R.vertices[ contributingEdges[i].v1/P.vertices.size() ];
 
     edgeOffsets.push_back( Vertex( v1.x - v2.x, v1.y - v2.y ) );
+
+    connectingEdges.push_back( tuple< int, int, int >(i,(i+1)%contributingEdges.size(),(i+2)%contributingEdges.size()) );
+
+    validEdges.push_back( i );
   }
 
   P.scaleBy( -1 );
   Polygon P2 = P;
 
-  for( int i = 0; i < contributingEdges.size(); ++i )
-  {
-    Vertex v1 = vertices[ contributingEdges[i].v1 ];
-    Vertex v2 = vertices[ contributingEdges[i].v2 ];
-    
-    for( int j = 0; j < contributingEdges.size(); ++j )
-    {
-      if( j == i ) continue;
+  bool notDoneYet = true;
 
+  set< pair< int, double >, Cmp > eraseEdges;
+
+  while( notDoneYet && validEdges.size() > 2 )
+  {
+    notDoneYet = false;
+
+    for( int l = 0; l < connectingEdges.size(); ++l, P = P2 )
+    {
+      int i = get<0>(connectingEdges[l]);
+      int j = get<1>(connectingEdges[l]);
+      int k = get<2>(connectingEdges[l]);
+
+
+      vector<int>::iterator intIterator = find(validEdges.begin(),validEdges.end(),i);
+
+      if( intIterator == validEdges.end() )
+      {
+        continue;
+      }
+
+      int ii = intIterator - validEdges.begin();
+
+      intIterator = find(validEdges.begin(),validEdges.end(),j);
+
+      if( intIterator == validEdges.end() )
+      {
+        continue;
+      }
+
+      int ji = intIterator - validEdges.begin();
+
+      intIterator = find(validEdges.begin(),validEdges.end(),k);
+
+      if( intIterator == validEdges.end() )
+      {
+        continue;
+      }
+
+      int ki = intIterator - validEdges.begin();
+
+      Vertex v1 = vertices[ contributingEdges[i].v1 ];
+      Vertex v2 = vertices[ contributingEdges[i].v2 ];
       Vertex v3 = vertices[ contributingEdges[j].v1 ];
       Vertex v4 = vertices[ contributingEdges[j].v2 ];
-    
-      for( int k = 0; k < contributingEdges.size(); ++k, P = P2 )
+      Vertex v5 = vertices[ contributingEdges[k].v1 ];
+      Vertex v6 = vertices[ contributingEdges[k].v2 ];
+
+      double s = intersectionEdges( v3, v4, v1, v2, v5, v6, edgeOffsets[j], edgeOffsets[i], edgeOffsets[k] );
+
+      if( s == -1 ) continue;
+
+      v1 = v1.offset( s * edgeOffsets[i].x, s * edgeOffsets[i].y );
+      v2 = v2.offset( s * edgeOffsets[i].x, s * edgeOffsets[i].y );
+      v3 = v3.offset( s * edgeOffsets[j].x, s * edgeOffsets[j].y );
+      v4 = v4.offset( s * edgeOffsets[j].x, s * edgeOffsets[j].y );
+
+      pair< double, double > t = intersection( v1, v2, v3, v4 );
+
+      if( t.first > 10000 || t.first < -10000 ) continue;
+
+      Vertex p = intersectionPoint( t.first, v1, v2 );
+      Vertex p2 = intersectionPoint( t.second, v3, v4 );
+
+      s += 1.0;
+
+      P.scaleBy( s );
+      P.offsetBy( p );
+
+      if( !isValidFit( p ) ) continue;
+
+      if( s > maxScale )
       {
-        if( j == k || i == k ) continue;
-
-        Vertex v5 = vertices[ contributingEdges[k].v1 ];
-        Vertex v6 = vertices[ contributingEdges[k].v2 ];
-
-        double s = intersectionEdges( v1, v2, v3, v4, v5, v6, edgeOffsets[i], edgeOffsets[j], edgeOffsets[k] );
-
-        if( s + 1.0 <= maxScale ) continue;
-
-
-        Vertex v11 = v1.offset( s * edgeOffsets[i].x, s * edgeOffsets[i].y );
-        Vertex v12 = v2.offset( s * edgeOffsets[i].x, s * edgeOffsets[i].y );
-        Vertex v13 = v3.offset( s * edgeOffsets[j].x, s * edgeOffsets[j].y );
-        Vertex v14 = v4.offset( s * edgeOffsets[j].x, s * edgeOffsets[j].y );
-
-
-        pair< double, double > t = intersection( v11, v12, v13, v14 );
-
-
-        if( t.first > 10000 || t.first < -10000 ) continue;
-
-        Vertex p = intersectionPoint( t.first, v11, v12 );
-        Vertex p2 = intersectionPoint( t.second, v13, v14 );
-
-        s += 1.0;
-
-//        cout << s << endl;
-
-        P.scaleBy( s );
-        P.offsetBy( p );
-
-        if( !isValidFit( p ) ) continue;
-//        cout << "valid\n";
-
         maxScale = s;
         bestFitOrigin = p;
         isNewBestScale = true;
+
       }
+
+      eraseEdges.insert( pair< int, double >( validEdges[ji], s ) );
+
+      notDoneYet = true;
+    }
+
+    if( !eraseEdges.empty() )
+    {
+      int ve = (*(eraseEdges.begin())).first;
+
+      eraseEdges.erase(eraseEdges.begin());
+
+      vector< int >::iterator intIterator;
+
+      // Find position of v1 if it already exists
+      intIterator = find(validEdges.begin(),validEdges.end(),ve);
+
+      int i = intIterator - validEdges.begin();
+
+      int s = contributingEdges.size();
+
+      connectingEdges.push_back( tuple< int, int, int >(validEdges[(i-2+s)%s],validEdges[(i-1+s)%s],validEdges[(i+1)%s]) );
+      connectingEdges.push_back( tuple< int, int, int >(validEdges[(i-1+s)%s],validEdges[(i+1)%s],validEdges[(i+2)%s]) );
+
+      validEdges.erase( intIterator );
+
+      notDoneYet = true;
     }
   }
 
-//  cout << maxScale << endl;
   return isNewBestScale;
 }
 
@@ -418,8 +451,6 @@ void findBestFit( Polygon P, Polygon R, double &scale, double &rotation, Vertex 
 
   R.offsetBy( origin );
 
-//  ProgressBar *findingBestScale = new ProgressBar(360/rotationOffset, "Finding best scale");
-
   for( double r = 0; r < 360; r += rotationOffset )
   {
     Polygon PCopy = P;
@@ -434,13 +465,12 @@ void findBestFit( Polygon P, Polygon R, double &scale, double &rotation, Vertex 
     {
       rotation = r;
     }
-    
-//    findingBestScale->Increment();
   }
 
-  offset = offset.offset( -origin.x, -origin.y );
 
-//  findingBestScale->Finish();
+  P.scaleBy(scale);
+
+  offset = offset.offset( -origin.x, -origin.y ).offset(P.computeOffset(rotation));
 }
 
 void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offset, string outputName, double scaleUp )
@@ -448,7 +478,7 @@ void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offs
   double width = 0;
   double height = 0;
 
-  Vertex origin = Vertex( 0, 0 );
+  Vertex origin = Vertex( -1000000, -1000000 );
 
   for( int i = 0; i < R.vertices.size(); ++i )
   {
@@ -460,6 +490,9 @@ void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offs
     origin.x = max( -v1.x, origin.x );
     origin.y = max( -v1.y, origin.y );
   }
+
+  width += origin.x;
+  height += origin.y;
 
   VImage image = VImage::black(width*scaleUp+4,height*scaleUp+4).invert();
 
@@ -510,7 +543,7 @@ void drawImage( string imageName, Polygon R, double scale, double rotation, Vert
   double width = 0;
   double height = 0;
 
-  Vertex origin = Vertex( 0, 0 );
+  Vertex origin = Vertex( -1000000, -1000000 );
 
   for( int i = 0; i < R.vertices.size(); ++i )
   {
@@ -589,7 +622,6 @@ void polygonFromAlphaImage( Polygon &P, string imageName, double resize )
     }
 
     vector< Edge > edges = grahamScan( vertices );
-
 
     Vertex origin = Vertex( -1000000, -1000000 );
 

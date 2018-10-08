@@ -26,7 +26,15 @@ public:
 
   void computeContributingEdges();
 
+  void computeIntersections( bool removeNonCycles );
+
+  void checkIfValidFit();
+
   bool findBestScale( double &maxScale, Vertex &bestFitOrigin );
+
+  void findBestScale2( double &maxScale, Vertex &bestFitOrigin );
+
+  void findBestScale3( double &maxScale, Vertex &bestFitOrigin );
 
   bool isValidFit( Vertex &c );
 
