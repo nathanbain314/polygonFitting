@@ -30,7 +30,7 @@ PolygonFitting& PolygonFitting::operator=( const PolygonFitting& rhs )
 }
 
 // Create vertices and edges by offsetting each edge in P by each edge in R
-void PolygonFitting::createOffsetEdges( Polygon &P, Polygon &R )
+void PolygonFitting::createOffsetEdges()
 {
   for( int j = 0; j < R.vertices.size(); ++j )
   {
@@ -154,7 +154,7 @@ pair< double, double > intersection( Vertex v1, Vertex v2, Vertex v3, Vertex v4 
   double numerator2  = ( x[0] - x[2] ) * ( y[0] - y[1] ) + ( x[1] - x[0] ) * ( y[0] - y[2] );
 
   // Check if parallel
-  if( abs(denominator) < 0.0001 || numerator1 == -numerator2 )
+  if( abs(denominator) < 0.0001 || ( numerator1 == -numerator2 && numerator1 != 0 ) )
   {
     return pair< double, double >( -1, -1 );
   }
@@ -172,7 +172,7 @@ Vertex intersectionPoint( double t, Vertex v1, Vertex v2 )
 
 void PolygonFitting::computeContributingEdges()
 {
-  createOffsetEdges(P,R);
+  createOffsetEdges();
 
   contributingEdges = grahamScan( vertices );
 
@@ -189,7 +189,7 @@ void PolygonFitting::computeContributingEdges()
   P.scaleBy(-1);
 
   vertices = vector< Vertex >();
-  createOffsetEdges(P,R);
+  createOffsetEdges();
 }
 
 bool isOnLineSegment( Vertex v1, Vertex v2, Vertex v3 )
@@ -206,7 +206,7 @@ bool isOnLineSegment( Vertex v1, Vertex v2, Vertex v3 )
   return false;
 }
 
-bool PolygonFitting::isValidFit( Vertex &c )
+bool PolygonFitting::isValidFit()
 {
   for( int i = 0; i < P.vertices.size(); ++i )
   {
@@ -290,15 +290,14 @@ double intersectionEdges( Vertex v1, Vertex v2, Vertex v3, Vertex v4, Vertex v5,
   return result / denominator3;
 }
 
-
 struct Cmp
 {
     bool operator ()(const pair< int, double> &a, const pair< int, double> &b)
     {
+      if( a.first == b.first ) return false;
         return a.second < b.second;
     }
 };
-
 
 bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
 {
@@ -336,7 +335,6 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
       int i = get<0>(connectingEdges[l]);
       int j = get<1>(connectingEdges[l]);
       int k = get<2>(connectingEdges[l]);
-
 
       vector<int>::iterator intIterator = find(validEdges.begin(),validEdges.end(),i);
 
@@ -393,14 +391,13 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
       P.scaleBy( s );
       P.offsetBy( p );
 
-      if( !isValidFit( p ) ) continue;
+      if( !isValidFit() ) continue;
 
       if( s > maxScale )
       {
         maxScale = s;
         bestFitOrigin = p;
         isNewBestScale = true;
-
       }
 
       eraseEdges.insert( pair< int, double >( validEdges[ji], s ) );
@@ -466,7 +463,6 @@ void findBestFit( Polygon P, Polygon R, double &scale, double &rotation, Vertex 
       rotation = r;
     }
   }
-
 
   P.scaleBy(scale);
 

@@ -22,12 +22,12 @@ Vertex& Vertex::operator=( const Vertex& rhs )
 
 bool Vertex::operator==( const Vertex& rhs )
 {
-  return (this->x == rhs.x && this->y == rhs.y);
+  return ( abs( this->x - rhs.x ) < 0.0001 && abs( this->y - rhs.y ) < 0.0001 );
 }
 
 bool Vertex::operator!=( const Vertex& rhs )
 {
-  return (this->x != rhs.x || this->y != rhs.y);
+  return ( abs( this->x - rhs.x ) > 0.0001 || abs( this->y - rhs.y ) > 0.0001 );
 }
 
 Vertex Vertex::offset( double _x, double _y )
@@ -38,4 +38,9 @@ Vertex Vertex::offset( double _x, double _y )
 Vertex Vertex::offset( Vertex v )
 {
   return Vertex( x + v.x, y + v.y );;
+}
+
+ostream& operator<<( ostream &os, const Vertex& v )
+{
+  return os << v.x << " " << v.y;
 }

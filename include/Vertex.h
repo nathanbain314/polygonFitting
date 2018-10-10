@@ -40,3 +40,5 @@ public:
 
   Vertex offset( Vertex v );
 };
+
+ostream& operator<<( ostream &os, const Vertex& v );
