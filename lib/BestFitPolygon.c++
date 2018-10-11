@@ -71,7 +71,7 @@ void imageInPolygon()
 
   polygonFromAlphaImage( P, "1.png", 2 );
 //P.scaleBy(0.0001);
-/*
+
 {
 double x0=1.5,y0=0.5,r=1.5;  // circle params
 double a,da,x,y;
@@ -82,7 +82,7 @@ for (a=0.0;a<2.0*M_PI;)         // full circle
     {
     x=x0+(2*r*cos(a));
     y=y0+(r*sin(a));
-    a+=(rand()%70)*M_PI/180.0;              // random angle step < 20,60 > degrees
+    a+=(rand()%2)*M_PI/180.0;              // random angle step < 20,60 > degrees
 
 if( R.vertices.size() > 0 && x==R.vertices[R.vertices.size()-1].x && y==R.vertices[R.vertices.size()-1].y) continue;
 
@@ -97,7 +97,7 @@ minY = min(minY,y);
 
     R.offsetBy(Vertex(-minX,-minY));
 }
-*/
+//R.scaleBy(10000);
 
 /*
 R.addVertex(728.529,880.483);
@@ -226,7 +226,7 @@ R.addVertex(733.88,544.805);
   R.addEdge(5,6);
   R.addEdge(6,0);
 */
-test4(R);
+//test4(R);
 
   double scale, rotation;
 
@@ -236,7 +236,14 @@ test4(R);
 
   findBestFit( P, R, scale, rotation, offset, 360 );
 
-std::chrono::system_clock::time_point end= std::chrono::system_clock::now();
+/*
+R.scaleBy(0.0001);
+scale *= 0.0001;
+offset.x *= 0.0001;
+offset.y *= 0.0001;
+*/
+
+std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count()/1000000000.0 <<std::endl;
 
   cout << scale << " " << rotation << " " << offset.x << " " << offset.y << endl;

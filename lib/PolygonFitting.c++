@@ -154,7 +154,7 @@ pair< double, double > intersection( Vertex v1, Vertex v2, Vertex v3, Vertex v4 
   double numerator2  = ( x[0] - x[2] ) * ( y[0] - y[1] ) + ( x[1] - x[0] ) * ( y[0] - y[2] );
 
   // Check if parallel
-  if( abs(denominator) < 0.0001 || ( numerator1 == -numerator2 && numerator1 != 0 ) )
+  if( abs(denominator) < 0.0000001 || ( numerator1 == -numerator2 && numerator1 != 0 ) )
   {
     return pair< double, double >( -1, -1 );
   }
@@ -198,7 +198,7 @@ bool isOnLineSegment( Vertex v1, Vertex v2, Vertex v3 )
 
   bool inBetween = v1.x >= min(v2.x,v3.x) && v1.x <= max(v2.x,v3.x) && v1.y >= min(v2.y,v3.y) && v1.y <= max(v2.y,v3.y);
 
-  if( inBetween && abs(area) < 0.0001 )
+  if( inBetween && abs(area) < 0.0000001 )
   {
     return true;
   }
@@ -230,8 +230,8 @@ bool PolygonFitting::isValidFit()
       v0 = v0.offset( -x, -y );
       v1 = v1.offset( -x, -y );
 
-      sum += ( v1.x * v0.y - v0.x * v1.y > 0.0001 );
-      sumNeeded -= ( abs(v1.x * v0.y - v0.x * v1.y) < 0.0001 );
+      sum += ( v1.x * v0.y - v0.x * v1.y > 0.0000001 );
+      sumNeeded -= ( abs(v1.x * v0.y - v0.x * v1.y) < 0.0000001 );
     }
 
     // Point not in polygon
@@ -279,11 +279,11 @@ double intersectionEdges( Vertex v1, Vertex v2, Vertex v3, Vertex v4, Vertex v5,
   double denominator1 = ( a[1] * b[2] + a[2] * b[0] );
   double denominator2 = ( c[1] * d[2] + c[2] * d[0] );
 
-  if( abs(denominator1) < 0.0001 || abs(denominator2) < 0.0001 ) return -1;
+  if( abs(denominator1) < 0.0000001 || abs(denominator2) < 0.0000001 ) return -1;
 
   double denominator3 = ( a[1] * o[1] + b[0] * o[0] ) / denominator1 - ( c[1] * o[3] + d[0] * o[2] ) / denominator2;
 
-  if( abs(denominator3) < 0.0001 ) return -1;
+  if( abs(denominator3) < 0.0000001 ) return -1;
 
   double result = ( c[0] * d[0] + c[1] * d[1] ) / denominator2 - ( a[0] * b[0] + a[1] * b[1] ) / denominator1;
 
@@ -336,32 +336,17 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
       int j = get<1>(connectingEdges[l]);
       int k = get<2>(connectingEdges[l]);
 
-      vector<int>::iterator intIterator = find(validEdges.begin(),validEdges.end(),i);
+      int found = 0;
 
-      if( intIterator == validEdges.end() )
+      for( int m = 0; m < validEdges.size(); ++m )
       {
-        continue;
+        if( validEdges[m] == i || validEdges[m] == j || validEdges[m] == k )
+        {
+          ++found;
+        }
       }
 
-      int ii = intIterator - validEdges.begin();
-
-      intIterator = find(validEdges.begin(),validEdges.end(),j);
-
-      if( intIterator == validEdges.end() )
-      {
-        continue;
-      }
-
-      int ji = intIterator - validEdges.begin();
-
-      intIterator = find(validEdges.begin(),validEdges.end(),k);
-
-      if( intIterator == validEdges.end() )
-      {
-        continue;
-      }
-
-      int ki = intIterator - validEdges.begin();
+      if( found < 3 ) continue;
 
       Vertex v1 = vertices[ contributingEdges[i].v1 ];
       Vertex v2 = vertices[ contributingEdges[i].v2 ];
@@ -372,7 +357,12 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
 
       double s = intersectionEdges( v3, v4, v1, v2, v5, v6, edgeOffsets[j], edgeOffsets[i], edgeOffsets[k] );
 
-      if( s == -1 ) continue;
+      if( s == -1 )
+      {
+        connectingEdges.erase( connectingEdges.begin() + l );
+
+        continue;
+      }
 
       v1 = v1.offset( s * edgeOffsets[i].x, s * edgeOffsets[i].y );
       v2 = v2.offset( s * edgeOffsets[i].x, s * edgeOffsets[i].y );
@@ -381,10 +371,14 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
 
       pair< double, double > t = intersection( v1, v2, v3, v4 );
 
-      if( t.first > 10000 || t.first < -10000 ) continue;
+      if( t.first > 10000 || t.first < -10000 )
+      {
+        connectingEdges.erase( connectingEdges.begin() + l );
+
+        continue;
+      }
 
       Vertex p = intersectionPoint( t.first, v1, v2 );
-      Vertex p2 = intersectionPoint( t.second, v3, v4 );
 
       s += 1.0;
 
@@ -398,34 +392,39 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
         maxScale = s;
         bestFitOrigin = p;
         isNewBestScale = true;
-      }
+      }      
 
-      eraseEdges.insert( pair< int, double >( validEdges[ji], s ) );
+      eraseEdges.insert( pair< int, double >( j, s ) );
 
       notDoneYet = true;
+
+      connectingEdges.erase( connectingEdges.begin() + l );
     }
 
     if( !eraseEdges.empty() )
     {
-      int ve = (*(eraseEdges.begin())).first;
+      while( !eraseEdges.empty() )
+      {
+        int ve = (*(eraseEdges.begin())).first;
 
-      eraseEdges.erase(eraseEdges.begin());
+        eraseEdges.erase(eraseEdges.begin());
 
-      vector< int >::iterator intIterator;
+        vector< int >::iterator intIterator;
 
-      // Find position of v1 if it already exists
-      intIterator = find(validEdges.begin(),validEdges.end(),ve);
+        // Find position of v1 if it already exists
+        intIterator = find(validEdges.begin(),validEdges.end(),ve);
 
-      int i = intIterator - validEdges.begin();
+        int i = intIterator - validEdges.begin();
 
-      int s = contributingEdges.size();
+        int s = contributingEdges.size();
 
-      connectingEdges.push_back( tuple< int, int, int >(validEdges[(i-2+s)%s],validEdges[(i-1+s)%s],validEdges[(i+1)%s]) );
-      connectingEdges.push_back( tuple< int, int, int >(validEdges[(i-1+s)%s],validEdges[(i+1)%s],validEdges[(i+2)%s]) );
+        connectingEdges.push_back( tuple< int, int, int >(validEdges[(i-2+s)%s],validEdges[(i-1+s)%s],validEdges[(i+1)%s]) );
+        connectingEdges.push_back( tuple< int, int, int >(validEdges[(i-1+s)%s],validEdges[(i+1)%s],validEdges[(i+2)%s]) );
 
-      validEdges.erase( intIterator );
+        validEdges.erase( intIterator );
 
-      notDoneYet = true;
+        notDoneYet = true;
+      }
     }
   }
 
@@ -593,7 +592,7 @@ void drawImage( string imageName, Polygon R, double scale, double rotation, Vert
 
 void polygonFromAlphaImage( Polygon &P, string imageName, double resize )
 {
-  VImage image = VImage::vipsload((char *)imageName.c_str()).resize(1.0/resize);
+  VImage image = VImage::vipsload((char *)imageName.c_str()).autorot().colourspace(VIPS_INTERPRETATION_sRGB).resize(1.0/resize);
 
   int width = image.width();
   int height = image.height();
