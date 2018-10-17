@@ -12,6 +12,7 @@ public:
   vector< Edge > edges;
   vector< Vertex > vertices;
   vector< Edge > contributingEdges, contributingEdgesCopy;  
+  vector< Vertex > edgeOffsets;
   vector< int > contributingVertices;  
 
   PolygonFitting(){}
@@ -37,7 +38,7 @@ public:
   void drawImageFit( double maxScale, Vertex bestFitOrigin );
 };
 
-void findBestFit( Polygon P, Polygon R, double &scale, double &rotation, Vertex &offset, double rotationOffset = 1.0 );
+void findBestFit( Polygon P2, Polygon R, double &scale, double &rotation, Vertex &offset, double rotationOffset = 1.0 );
 
 void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offset, string outputName, double scaleUp );
 
@@ -45,6 +46,7 @@ void drawImage( string imageName, Polygon R, double scale, double rotation, Vert
 
 void polygonFromAlphaImage( Polygon &P, string imageName, double resize = 1.0 );
 
+void convexPolygonFromVertices( vector< Vertex > &vertices, Polygon &P );
 
 double ccw( Vertex v1, Vertex v2, Vertex v3 );
 

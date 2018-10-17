@@ -54,7 +54,7 @@ void test4( Polygon &R )
 {
   R.addVertex( 0,0 );
   R.addVertex( 0,2 );
-  R.addVertex( 2,3 );
+  R.addVertex( 2,2 );
   R.addVertex( 3,3 );
   R.addVertex( 3,0 );
 
@@ -65,13 +65,81 @@ void test4( Polygon &R )
   R.addEdge(4,0);
 }
 
+void test5( Polygon &R )
+{
+  R.addVertex( 0,0 );
+  R.addVertex( 0,0.5 );
+  R.addVertex( 0.5,1 );
+  R.addVertex( 0.5,0 );
+
+  R.addEdge(0,1);
+  R.addEdge(1,2);
+  R.addEdge(2,3);
+  R.addEdge(3,0);
+}
+
+void test6( Polygon &R )
+{
+  R.addVertex( 0,0 );
+  R.addVertex( 0,1 );
+  R.addVertex( .5,2 );
+  R.addVertex( 2,2.214 );
+  R.addVertex( 2.5,2.8 );
+  R.addVertex( 3,3 );
+  R.addVertex( 3,0 );
+
+  R.addEdge(0,1);
+  R.addEdge(1,2);
+  R.addEdge(2,3);
+  R.addEdge(3,4);
+  R.addEdge(4,5);
+  R.addEdge(5,6);
+  R.addEdge(6,0);
+}
+
+void test7( Polygon &R )
+{
+  R.addVertex( 0,0 );
+  R.addVertex( 0,1 );
+  R.addVertex( 1,2 );
+//  R.addVertex( 0.5,0 );
+
+  R.addEdge(0,1);
+  R.addEdge(1,2);
+  R.addEdge(2,0);
+//  R.addEdge(3,0);
+}
+
+void test8( Polygon &R )
+{
+  R.addVertex( 0,0 );
+  R.addVertex( 1,1 );
+  R.addVertex( 1,0 );
+  R.addVertex( 0,1 );
+
+  R.addEdge(0,1);
+  R.addEdge(1,2);
+  R.addEdge(2,3);
+  R.addEdge(3,0);
+}
+
 void imageInPolygon()
 {
   Polygon P, P2, R;
+/*
+  P.addVertex( 0,0 );
+  P.addVertex( 0,0.5 );
+  P.addVertex( 0.5,1 );
+  P.addVertex( 0.5,0 );
 
-  polygonFromAlphaImage( P, "1.png", 2 );
+  P.addEdge(0,1);
+  P.addEdge(1,2);
+  P.addEdge(2,3);
+  P.addEdge(3,0);
+*/
+//  polygonFromAlphaImage( P2, "1.png", 2 );
 //P.scaleBy(0.0001);
-
+/*
 {
 double x0=1.5,y0=0.5,r=1.5;  // circle params
 double a,da,x,y;
@@ -97,6 +165,7 @@ minY = min(minY,y);
 
     R.offsetBy(Vertex(-minX,-minY));
 }
+*/
 //R.scaleBy(10000);
 
 /*
@@ -226,7 +295,15 @@ R.addVertex(733.88,544.805);
   R.addEdge(5,6);
   R.addEdge(6,0);
 */
-//test4(R);
+
+  test3(R);
+  test5(P2);
+
+//  convexPolygonFromVertices( P2.vertices, P );
+
+
+//  R.scaleBy(0.1);
+//  P2.scaleBy(0.03);
 
   double scale, rotation;
 
@@ -234,8 +311,11 @@ R.addVertex(733.88,544.805);
 
   std::chrono::system_clock::time_point begin = std::chrono::system_clock::now();
 
-  findBestFit( P, R, scale, rotation, offset, 360 );
+  findBestFit( P2, R, scale, rotation, offset, 1 );
 
+//  offset = offset.offset( Vertex(1,0) );
+//scale = 2.4;
+//offset.x = 1.8;
 /*
 R.scaleBy(0.0001);
 scale *= 0.0001;
@@ -248,7 +328,7 @@ std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nan
 
   cout << scale << " " << rotation << " " << offset.x << " " << offset.y << endl;
 
-  drawImage( P, R, scale, rotation, offset, "out.png", 100 );
+  drawImage( P2, R, scale, rotation, offset, "out.png", 100 );
 
 //  drawImage( "1.png", R, scale, rotation, offset, "out.png", 100 );
 }

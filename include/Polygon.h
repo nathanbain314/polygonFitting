@@ -22,6 +22,10 @@ public:
 
   void addEdge( Edge e );
 
+  void switchDirection();
+
+  void makeClockwise();
+
   void scaleBy( double scale );
 
   void offsetBy( Vertex offset );

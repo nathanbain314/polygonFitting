@@ -170,33 +170,28 @@ Vertex intersectionPoint( double t, Vertex v1, Vertex v2 )
   return Vertex( x, y );
 }
 
-void PolygonFitting::computeContributingEdges()
+double distanceToLine( Vertex p, Vertex v1, Vertex v2 )
 {
-  createOffsetEdges();
+  double x[3] = {p.x,v1.x,v2.x};
+  double y[3] = {p.y,v1.y,v2.y};
 
-  contributingEdges = grahamScan( vertices );
+  double xDiff = x[2] - x[1];
+  double yDiff = y[2] - y[1];
 
-  for( int i = contributingEdges.size()-1; i >= 0; --i )
-  {
-    if( contributingEdges[i].v1 / P.vertices.size() == contributingEdges[i].v2 / P.vertices.size() )
-    {
-      contributingEdges.erase(contributingEdges.begin() + i);
-    }
-  }
+  double denominator = sqrt( xDiff * xDiff + yDiff * yDiff );
 
-  contributingEdgesCopy = contributingEdges;
+  if( denominator == 0 ) return -1;
 
-  P.scaleBy(-1);
+  double numerator = abs( yDiff * x[0] - xDiff * y[0] + x[2] * y[1] - y[2] * x[1] );
 
-  vertices = vector< Vertex >();
-  createOffsetEdges();
+  return numerator / denominator;
 }
 
 bool isOnLineSegment( Vertex v1, Vertex v2, Vertex v3 )
 {
   double area = ( v1.x * ( v2.y - v3.y ) + v2.x * ( v3.y - v1.y ) + v3.x * ( v1.y - v2.y ) );
 
-  bool inBetween = v1.x >= min(v2.x,v3.x) && v1.x <= max(v2.x,v3.x) && v1.y >= min(v2.y,v3.y) && v1.y <= max(v2.y,v3.y);
+  bool inBetween = v1.x >= min(v2.x,v3.x) - 0.0000001 && v1.x <= max(v2.x,v3.x) + 0.0000001 && v1.y >= min(v2.y,v3.y) - 0.0000001 && v1.y <= max(v2.y,v3.y) + 0.0000001;
 
   if( inBetween && abs(area) < 0.0000001 )
   {
@@ -206,40 +201,150 @@ bool isOnLineSegment( Vertex v1, Vertex v2, Vertex v3 )
   return false;
 }
 
+void PolygonFitting::computeContributingEdges()
+{
+  P.scaleBy(-1);
+
+  vector< int > verticesUsed;
+
+  for( int i = 0; i < R.edges.size(); ++i )
+  {
+    Vertex v1 = R.vertices[ R.edges[i].v1 ];
+    Vertex v2 = R.vertices[ R.edges[i].v2 ];
+
+    double smallestAngle = 1000000000;
+    int bestVertex = 0;
+
+    for( int j = 0; j < P.vertices.size(); ++j )
+    {
+      Vertex p = P.vertices[j].offset( v1 );
+
+      double angle = ccw( v1, v2, p );
+ 
+      if( angle < smallestAngle )
+      {
+        smallestAngle = angle;
+        bestVertex = j;
+      }
+    }
+
+    v1 = v1.offset( P.vertices[bestVertex] );
+    v2 = v2.offset( P.vertices[bestVertex] );
+
+    if( i > 0 )
+    {
+      int s = P.vertices.size();
+
+      int s2 = contributingEdges.size();
+
+      int prevVertex = verticesUsed[s2-1];
+
+      Vertex v3 = vertices[contributingEdges[s2-1].v1];
+      Vertex v4 = vertices[contributingEdges[s2-1].v2];
+
+      pair< double, double > t = intersection( v3, v4, v1, v2 );
+    
+      if( t.first > 1+0.0000001 || t.second < -0.0000001 )
+      {
+        int direction = 1;
+
+        Vertex p1 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex - 1 + s ) % s ] );
+        Vertex p2 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex + 1 + s ) % s ] );
+
+        if( isOnLineSegment( p1, v3, v4 ) )
+        {
+          direction = 1;
+        }
+        else if( isOnLineSegment( p2, v3, v4 ) )
+        {
+          direction = -1;
+        }
+        else if( ccw( v4, R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex - 1 + s ) % s ] ), R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex + 1 + s ) % s] ) ) > 0 ) //ccw( v3, v4, R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex - 1 + s ) % s ] ) ) < ccw( v3, v4, R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex + 1 + s ) % s] ) ) )
+        {
+          direction = -1;
+        }
+
+        for( int k = prevVertex; k != bestVertex; k = ( k + direction + s ) % s )
+        {
+          vertices.push_back( R.vertices[ R.edges[i].v1 ].offset( P.vertices[k] ) );
+          vertices.push_back( R.vertices[ R.edges[i].v1 ].offset( P.vertices[( k + direction + s ) % s] ) );
+
+          contributingEdges.push_back( Edge( vertices.size() - 2, vertices.size() - 1 ) );
+
+          edgeOffsets.push_back( P.vertices[( k + direction + s ) % s] );
+        }
+      }
+    }
+
+    vertices.push_back( v1 );
+    vertices.push_back( v2 );
+
+    contributingEdges.push_back( Edge( vertices.size() - 2, vertices.size() - 1 ) );
+
+    verticesUsed.push_back( bestVertex );
+
+    edgeOffsets.push_back( P.vertices[bestVertex] );
+  }
+}
+
 bool PolygonFitting::isValidFit()
 {
-  for( int i = 0; i < P.vertices.size(); ++i )
+  for( int i = 0; i < R.edges.size(); ++i )
   {
-    int sum = 0;
-    int sumNeeded = R.vertices.size();
+    Vertex v1 = R.vertices[R.edges[i].v1];
+    Vertex v2 = R.vertices[R.edges[i].v2];
 
-    double x = P.vertices[i].x;
-    double y = P.vertices[i].y;
-
-    for( int j = 0; j < R.edges.size(); ++j )
+    for( int j = 0; j < P.edges.size(); ++j )
     {
-      Vertex v0 = R.vertices[ R.edges[j].v1 ];
-      Vertex v1 = R.vertices[ R.edges[j].v2 ];
+      pair< double, double > t = intersection( v1, v2, P.vertices[P.edges[j].v1], P.vertices[P.edges[j].v2] );
 
-      if( isOnLineSegment( P.vertices[i], v0, v1 ) )
+      if( t.first < -0.0000001 || t.second < -0.0000001 ) continue;
+
+      // Edges intersect
+      if( t.first > 0.0000001 && t.first < 1-0.0000001 && t.second > 0.0000001 && t.second < 1-0.0000001 )
       {
-        --sumNeeded;
-        continue;
+        return false;
       }
 
-      v0 = v0.offset( -x, -y );
-      v1 = v1.offset( -x, -y );
 
-      sum += ( v1.x * v0.y - v0.x * v1.y > 0.0000001 );
-      sumNeeded -= ( abs(v1.x * v0.y - v0.x * v1.y) < 0.0000001 );
-    }
-
-    // Point not in polygon
-    if( sum != 0 && sum != sumNeeded )
-    {
-      return false;
+      if( ( t.first < 0.0000001 && t.second < 1 - 0.0000001 ) || ( t.first < 1 - 0.0000001 && t.second < 0.0000001 ) )//&& t.second < 1 - 0.0000001 )
+      {
+        if( ccw( v1, P.vertices[P.edges[j].v2], v2 ) < -0.0000001 )
+        {
+          return false;
+        }
+      }
     }
   }
+
+  Vertex p = P.vertices[0];
+
+  int n = 0;
+
+  for( int i = 0; i < R.edges.size(); ++i )
+  {
+    Vertex v1 = R.vertices[R.edges[i].v1];
+    Vertex v2 = R.vertices[R.edges[i].v2];
+
+    if( isOnLineSegment( p, v1, v2 ) ) return true;
+
+    if( v1.y <= p.y )
+    {
+      if( v2.y > p.y && ccw( v1, p, v2 ) < 0 )
+      {
+        ++n;
+      }
+    }
+    else
+    {
+      if( v2.y <= p.y && ccw( v1, p, v2 ) > 0 )
+      {
+        --n;
+      }
+    }
+  }
+
+  if( n == 0 ) return false;
 
   return true;
 }
@@ -303,17 +408,12 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
 {
   bool isNewBestScale = false;
 
-  vector< Vertex > edgeOffsets;
+//  vector< Vertex > edgeOffsets;
   vector< int > validEdges;
   vector< tuple< int, int, int > > connectingEdges;
 
   for( int i = 0; i < contributingEdges.size(); ++i )
   {
-    Vertex v1 = vertices[ contributingEdges[i].v1 ];
-    Vertex v2 = R.vertices[ contributingEdges[i].v1/P.vertices.size() ];
-
-    edgeOffsets.push_back( Vertex( v1.x - v2.x, v1.y - v2.y ) );
-
     connectingEdges.push_back( tuple< int, int, int >(i,(i+1)%contributingEdges.size(),(i+2)%contributingEdges.size()) );
 
     validEdges.push_back( i );
@@ -357,7 +457,7 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
 
       double s = intersectionEdges( v3, v4, v1, v2, v5, v6, edgeOffsets[j], edgeOffsets[i], edgeOffsets[k] );
 
-      if( s == -1 )
+      if( s > -1.0000001 && s < -1 + 0.0000001 )
       {
         connectingEdges.erase( connectingEdges.begin() + l );
 
@@ -431,8 +531,14 @@ bool PolygonFitting::findBestScale( double &maxScale, Vertex &bestFitOrigin )
   return isNewBestScale;
 }
 
-void findBestFit( Polygon P, Polygon R, double &scale, double &rotation, Vertex &offset, double rotationOffset )
+void findBestFit( Polygon P2, Polygon R, double &scale, double &rotation, Vertex &offset, double rotationOffset )
 {
+  Polygon P;
+  convexPolygonFromVertices( P2.vertices, P );
+
+  R.makeClockwise();
+  P.makeClockwise();
+
   scale = 0;
 
   Vertex origin = Vertex( -1000000, -1000000 );
@@ -465,7 +571,7 @@ void findBestFit( Polygon P, Polygon R, double &scale, double &rotation, Vertex 
 
   P.scaleBy(scale);
 
-  offset = offset.offset( -origin.x, -origin.y ).offset(P.computeOffset(rotation));
+  offset = offset.offset( -origin.x, -origin.y );//.offset(P.computeOffset(rotation));
 }
 
 void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offset, string outputName, double scaleUp )
@@ -631,4 +737,22 @@ void polygonFromAlphaImage( Polygon &P, string imageName, double resize )
 
     P.offsetBy(origin);
   }
+}
+
+void convexPolygonFromVertices( vector< Vertex > &vertices, Polygon &P )
+{
+  vector< Edge > edges = grahamScan( vertices );
+
+  Vertex origin = Vertex( -1000000, -1000000 );
+
+  for( int i = 0; i < edges.size(); ++i )
+  {
+    P.vertices.push_back( vertices[edges[i].v1] );
+    P.edges.push_back( Edge( i, (i+1)%edges.size() ) );
+
+    origin.x = max( -vertices[edges[i].v1].x, origin.x );
+    origin.y = max( -vertices[edges[i].v1].y, origin.y );
+  }
+
+  P.offsetBy(origin);
 }

@@ -40,6 +40,30 @@ void Polygon::addEdge( Edge e )
   edges.push_back( e );
 }
 
+void Polygon::switchDirection()
+{
+  for( int i = 0; i < vertices.size()/2; ++i )
+  {
+    Vertex t = vertices[i];
+    vertices[i] = vertices[vertices.size() - 1 - i];
+    vertices[vertices.size() - 1 - i] = t;
+  }
+}
+
+void Polygon::makeClockwise()
+{
+  double n = 0;
+  for( int i = 0; i < edges.size(); ++i )
+  {
+    n += ( vertices[edges[i].v2].x - vertices[edges[i].v1].x ) * ( vertices[edges[i].v2].y + vertices[edges[i].v1].y );
+  }
+
+  if( n < 0 )
+  {
+    switchDirection();
+  }
+}
+
 void Polygon::scaleBy( double scale )
 {
   for( int i = 0; i < vertices.size(); ++i )
