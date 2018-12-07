@@ -30,7 +30,9 @@ public:
 
   void offsetBy( Vertex offset );
 
-  void rotateBy( double r );
+  void rotateBy( double r, bool offset = false );
+
+  Vertex center();
 
   Vertex computeOffset( double r );
 };

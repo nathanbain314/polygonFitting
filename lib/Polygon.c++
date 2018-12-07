@@ -81,7 +81,7 @@ void Polygon::offsetBy( Vertex offset )
   }
 }
 
-void Polygon::rotateBy( double r )
+void Polygon::rotateBy( double r, bool offset )
 {
   double pi = 3.14159265358979;
 
@@ -100,7 +100,26 @@ void Polygon::rotateBy( double r )
     origin.y = max( -y, origin.y );
   }
   
-  offsetBy(origin);
+  if( offset ) offsetBy(Vertex(-origin.x,-origin.y));
+}
+
+Vertex Polygon::center()
+{
+  double maxX = -1000000000, minX = 1000000000, maxY = -1000000000, minY = 1000000000;
+
+  for( int i = 0; i < vertices.size(); ++i )
+  {
+    Vertex v1 = vertices[i];
+
+    minX = min( v1.x, minX );
+    maxX = max( v1.x, maxX );
+    minY = min( v1.y, minY );
+    maxY = max( v1.y, maxY );
+  }
+
+  offsetBy(Vertex(-(minX+maxX)/2,-(minY+maxY)/2));
+
+  return Vertex((minX+maxX)/2,(minY+maxY)/2);
 }
 
 Vertex Polygon::computeOffset( double r )

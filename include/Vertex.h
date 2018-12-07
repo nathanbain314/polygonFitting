@@ -32,6 +32,8 @@ public:
 
   Vertex& operator=( const Vertex& rhs );
 
+  bool equals( const Vertex& rhs, double epsilon );
+
   bool operator==( const Vertex& rhs );
 
   bool operator!=( const Vertex& rhs );
@@ -39,6 +41,8 @@ public:
   Vertex offset( double _x, double _y );
 
   Vertex offset( Vertex v );
+
+  Vertex scale( double s, Vertex o );
 };
 
 ostream& operator<<( ostream &os, const Vertex& v );

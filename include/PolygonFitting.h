@@ -10,7 +10,7 @@ public:
 
   vector< Polygon > polygons;
   vector< Edge > edges;
-  vector< Vertex > vertices;
+  vector< Vertex > vertices, fullVertices;
   vector< Edge > contributingEdges, contributingEdgesCopy;  
   vector< Vertex > edgeOffsets;
   vector< int > contributingVertices;  
@@ -33,18 +33,20 @@ public:
 
   bool findBestScale( double &maxScale, Vertex &bestFitOrigin );
 
-  bool isValidFit();
+  bool isValidFit( Vertex &c );
 
   void drawImageFit( double maxScale, Vertex bestFitOrigin );
 };
 
-void findBestFit( Polygon P2, Polygon R, double &scale, double &rotation, Vertex &offset, double rotationOffset = 1.0 );
+void findBestFit( Polygon P2, Polygon R, double &scale, double &rotation, Vertex &offset, double rotationOffset = 1.0, double startRotation = 0.0 );
 
 void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offset, string outputName, double scaleUp );
 
 void drawImage( string imageName, Polygon R, double scale, double rotation, Vertex offset, string outputName, double scaleUp );
 
 void polygonFromAlphaImage( Polygon &P, string imageName, double resize = 1.0 );
+
+void concavePolygonFromAlphaImage( Polygon &P, string imageName, double resize );
 
 void convexPolygonFromVertices( vector< Vertex > &vertices, Polygon &P );
 
