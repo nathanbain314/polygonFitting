@@ -579,13 +579,6 @@ void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offs
 
   P.offsetBy( Vertex( 2, 2) );
 
-  for( int i = 0; i < P.vertices.size(); ++i )
-  {
-    Vertex v1 = P.vertices[i];
-
-    image.draw_rect(ink,v1.x,v1.y,4,4);
-  }
-
   for( int i = 0; i < P.edges.size(); ++i )
   {
     Vertex v1 = P.vertices[P.edges[i].v1];
@@ -615,6 +608,9 @@ void drawImage( string imageName, Polygon R, double scale, double rotation, Vert
     origin.y = max( -v1.y, origin.y );
   }
 
+  width += origin.x;
+  height += origin.y;
+
   VImage image = VImage::black(width*scaleUp+4,height*scaleUp+4).invert();
   image = image.bandjoin(image).bandjoin(image);
 
@@ -640,10 +636,10 @@ void drawImage( string imageName, Polygon R, double scale, double rotation, Vert
 
   centerImage = centerImage.extract_area( left, top, centerImageWidth, centerImageHeight );
 
-  int xOffset = (offset.x + origin.x)*scaleUp+2;
-  int yOffset = (offset.y + origin.y)*scaleUp+2;
+  int xOffset = (offset.x + origin.x)*scaleUp+2-centerImage.width()/2;
+  int yOffset = (offset.y + origin.y)*scaleUp+4-centerImage.height()/2;
 
-  centerImage = centerImage.embed(xOffset,yOffset,centerImage.width()+xOffset,centerImage.height()+yOffset);//->set( "idx", -(offset.x + origin.x) )->set( "idy", -(offset.y + origin.y)*scaleUp ));
+  centerImage = centerImage.embed(xOffset,yOffset,centerImage.width()+xOffset,centerImage.height()+yOffset);
 
   VImage mask = centerImage.extract_band(3);
 

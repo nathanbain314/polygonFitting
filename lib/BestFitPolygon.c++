@@ -418,7 +418,7 @@ void imageInPolygon()
 
   std::chrono::system_clock::time_point begin = std::chrono::system_clock::now();
 
-  findBestFit( P2, R, scale, rotation, offset, 360, 20 );
+  findBestFit( P2, R, scale, rotation, offset, 10 );
 
 std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count()/1000000000.0 <<std::endl;
@@ -426,6 +426,8 @@ std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nan
   cout << scale << " " << rotation << " " << offset.x << " " << offset.y << endl;
 
   drawImage( P2, R, scale, rotation, offset, "out.png", 5 );
+
+  drawImage( "1.png", R, scale, rotation, offset, "out.png", 5 );
 }
 
 void RunBestFitPolygon()

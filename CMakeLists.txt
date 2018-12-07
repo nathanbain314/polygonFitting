@@ -28,22 +28,3 @@ ELSE()
   target_link_libraries(RunBestFitPolygon ${VIPS_LDFLAGS})
   add_definitions(${VIPS_CFLAGS} ${VIPS_CFLAGS_OTHER})
 ENDIF()
-
-
-# Locate GTest
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
-
-add_executable( RunUnitTests tests/unitTests.c++ ${SOURCE_FILES} )
-IF (WIN32)
-  set(VIPS_LDFLAGS vips-cpp vips gsf-1 z jpeg xml2 fftw3 m lcms2 pangoft2-1.0 tiff png16 exif pango-1.0 freetype fontconfig gobject-2.0 gmodule-2.0 gthread-2.0 glib-2.0 intl)
-  include_directories($ENV{VIPS_INCLUDE}/include $ENV{VIPS_INCLUDE}/include/glib-2.0 $ENV{VIPS_INCLUDE}/lib/glib-2.0/include)
-  target_link_libraries(RunUnitTests ${VIPS_LDFLAGS})
-ELSE()
-  target_link_libraries(RunUnitTests ${VIPS_LIBRARIES})
-  target_link_libraries(RunUnitTests ${VIPS_LDFLAGS})
-  add_definitions(${VIPS_CFLAGS} ${VIPS_CFLAGS_OTHER})
-ENDIF()
-
-target_link_libraries(RunUnitTests ${GTEST_LIBRARIES})
