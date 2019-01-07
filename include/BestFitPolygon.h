@@ -15,8 +15,6 @@
 
 #include <vips/vips8>
 
-#include "progress_bar.hpp"
-
 using namespace vips;
 using namespace std;
 

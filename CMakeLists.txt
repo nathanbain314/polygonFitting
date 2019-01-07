@@ -13,7 +13,7 @@ ENDIF()
 
 include_directories(include)
 
-file(GLOB SOURCE_FILES lib/Vertex.c++ lib/Edge.c++ lib/Polygon.c++ lib/PolygonFitting.c++ lib/progress_bar.c++)
+file(GLOB SOURCE_FILES lib/Vertex.c++ lib/Edge.c++ lib/Polygon.c++ lib/PolygonFitting.c++ )
 
 set( EXECUTABLES BestFitPolygon )
 

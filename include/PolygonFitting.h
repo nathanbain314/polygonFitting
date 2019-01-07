@@ -1,5 +1,4 @@
 #include "Polygon.h"
-#include "progress_bar.hpp"
 
 vector< Edge > grahamScan( vector< Vertex > vertices );
 
