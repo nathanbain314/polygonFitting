@@ -35,4 +35,12 @@ public:
   Vertex center();
 
   Vertex computeOffset( double r );
+
+  double minRatio();
+
+  double minLength();
+
+  bool notOnEdge( double width, double height );
+
+  double area();
 };

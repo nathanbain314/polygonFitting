@@ -44,13 +44,15 @@ void drawImage( Polygon P, Polygon R, double scale, double rotation, Vertex offs
 
 void drawImage( string imageName, Polygon R, double scale, double rotation, Vertex offset, string outputName, double scaleUp );
 
+void removeExtrasP( Polygon &P, double epsilon = -1 );
+
 void polygonFromAlphaImage( Polygon &P, string imageName, double resize = 1.0 );
 
 void concavePolygonFromAlphaImage( Polygon &P, string imageName, double resize );
 
 void convexPolygonFromVertices( vector< Vertex > &vertices, Polygon &P );
 
-double ccw( Vertex v1, Vertex v2, Vertex v3 );
+double ccw( Vertex &v1, Vertex &v2, Vertex &v3 );
 
 bool minY(Vertex i, Vertex j);
 
@@ -62,10 +64,12 @@ vector< Edge > grahamScan( vector< Vertex > vertices );
 
 Edge reverseEdge( Edge e );
 
-pair< double, double > intersection( Vertex v1, Vertex v2, Vertex v3, Vertex v4 );
+pair< double, double > intersection( Vertex &v1, Vertex &v2, Vertex &v3, Vertex &v4 );
 
-Vertex intersectionPoint( double t, Vertex v1, Vertex v2 );
+Vertex intersectionPoint( double t, Vertex &v1, Vertex &v2 );
 
 bool isOnLineSegment( Vertex v1, Vertex v2, Vertex v3 );
 
 double intersectionEdges( Vertex v1, Vertex v2, Vertex v3, Vertex v4, Vertex v5, Vertex v6, Vertex o1, Vertex o2, Vertex o3 );
+
+void decimate( Polygon &P, double epsilon );

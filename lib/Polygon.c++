@@ -111,6 +111,8 @@ Vertex Polygon::center()
   {
     Vertex v1 = vertices[i];
 
+    //cout << v1 << endl;
+
     minX = min( v1.x, minX );
     maxX = max( v1.x, maxX );
     minY = min( v1.y, minY );
@@ -167,4 +169,109 @@ Vertex Polygon::computeOffset( double r )
   }
 
   return Vertex( px - bx, py - by );
+}
+
+double Polygon::minRatio()
+{
+  double largestRatio = -1000000000;
+//  double bestAngle = 0;
+
+//  double lw, lh;
+
+  for( int i = 0; i < edges.size(); ++i )
+  {
+    double r = -atan2(vertices[edges[i].v2].y-vertices[edges[i].v1].y,vertices[edges[i].v2].x-vertices[edges[i].v1].x);
+
+    double xRange[2] = {1000000000,-1000000000};
+    double yRange[2] = {1000000000,-1000000000};
+
+    for( int j = 0; j < vertices.size(); ++j )
+    {
+      double x = vertices[j].x * cos( r ) - vertices[j].y * sin( r );
+      double y = vertices[j].x * sin( r ) + vertices[j].y * cos( r );
+
+      xRange[0] = min(x,xRange[0]);
+      xRange[1] = max(x,xRange[1]);
+
+      yRange[0] = min(y,yRange[0]);
+      yRange[1] = max(y,yRange[1]);
+    }
+
+    double width = xRange[1] - xRange[0];
+    double height = yRange[1] - yRange[0];
+
+    double ratio = max(width,height)/min(width,height);
+
+    largestRatio = max(ratio,largestRatio);
+  }
+
+  return largestRatio;
+}
+
+double Polygon::minLength()
+{
+  double minLength = 1000000000;
+
+  for( int i = 0; i < edges.size(); ++i )
+  {
+    double r = -atan2(vertices[edges[i].v2].y-vertices[edges[i].v1].y,vertices[edges[i].v2].x-vertices[edges[i].v1].x);
+
+    double xRange[2] = {1000000000,-1000000000};
+    double yRange[2] = {1000000000,-1000000000};
+
+    for( int j = 0; j < vertices.size(); ++j )
+    {
+      double x = vertices[j].x * cos( r ) - vertices[j].y * sin( r );
+      double y = vertices[j].x * sin( r ) + vertices[j].y * cos( r );
+
+      xRange[0] = min(x,xRange[0]);
+      xRange[1] = max(x,xRange[1]);
+
+      yRange[0] = min(y,yRange[0]);
+      yRange[1] = max(y,yRange[1]);
+    }
+
+    double width = xRange[1] - xRange[0];
+    double height = yRange[1] - yRange[0];
+
+    minLength = min(minLength,min(width,height));
+  }
+
+  return minLength;
+}
+
+bool Polygon::notOnEdge( double width, double height )
+{
+  for( int j = 0; j < vertices.size(); ++j )
+  {
+    if( vertices[j].x < 0.000001 || vertices[j].x > width - 0.000001 )
+    {
+      return false;
+    }
+    if( vertices[j].y < 0.000001 || vertices[j].y > height - 0.000001 )
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+double Polygon::area()
+{
+  double area = 0;
+
+  for( int i=0; i < vertices.size(); i += 2 )
+  {
+    double x0 = vertices[i].x;
+    double y0 = vertices[i].y;
+    double x1 = vertices[(i+2) % vertices.size()].x;
+    double y1 = vertices[(i+2) % vertices.size()].y;
+    double a = x0*y1 - x1*y0;
+    area += a;
+  }
+
+  area *= -0.5;
+
+  return area;
 }
