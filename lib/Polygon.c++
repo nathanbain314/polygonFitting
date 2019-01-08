@@ -100,7 +100,14 @@ void Polygon::rotateBy( double r, bool offset )
     origin.y = max( -y, origin.y );
   }
   
-  if( offset ) offsetBy(Vertex(-origin.x,-origin.y));
+  if( offset )
+  {
+    offsetBy(Vertex(-origin.x,-origin.y));
+  }
+  else
+  {
+    center();
+  }
 }
 
 Vertex Polygon::center()
