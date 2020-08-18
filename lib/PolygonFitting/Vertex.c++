@@ -1,4 +1,4 @@
-#include "Vertex.h"
+#include "PolygonFitting/Vertex.h"
 
 Vertex::Vertex( double _x, double _y )
 {

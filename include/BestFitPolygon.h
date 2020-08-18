@@ -15,7 +15,9 @@
 
 #include <vips/vips8>
 
+#include "PolygonFitting/PolygonFitting.h"
+
 using namespace vips;
 using namespace std;
 
-void RunBestFitPolygon();
+void RunBestFitPolygon( string interiorName, string boundingName, string outputName, double decimateValue, double angleOffset, double resize );

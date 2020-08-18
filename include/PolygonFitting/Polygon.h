@@ -1,4 +1,4 @@
-#include "Edge.h"
+#include "PolygonFitting/Edge.h"
 
 class Polygon
 {

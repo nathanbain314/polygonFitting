@@ -1,4 +1,4 @@
-#include "Edge.h"
+#include "PolygonFitting/Edge.h"
 
 Edge::Edge( int _v1, int _v2 )
 {

@@ -1,4 +1,4 @@
-#include "Vertex.h"
+#include "PolygonFitting/Vertex.h"
 
 class Edge
 {

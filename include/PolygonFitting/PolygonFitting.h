@@ -1,4 +1,4 @@
-#include "Polygon.h"
+#include "PolygonFitting/Polygon.h"
 
 vector< Edge > grahamScan( vector< Vertex > vertices );
 
