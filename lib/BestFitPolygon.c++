@@ -88,9 +88,9 @@ void BestFitPolygon( string interiorName, string boundingName, string outputName
   cout << "rotation: " << rotation << endl;
   cout << "offset: " << offset << endl;
 
-//  drawImage( P, R, scale, rotation, offset, outputName , resize );
+  drawImage( P, R, scale, rotation, offset, outputName , resize );
 
-  drawImage( interiorName, R, scale, rotation, offset, outputName, resize );
+//  drawImage( interiorName, R, scale, rotation, offset, outputName, resize );
 }
 
 void RunBestFitPolygon( string interiorName, string boundingName, string outputName, double decimateValue, double angleOffset, double resize )

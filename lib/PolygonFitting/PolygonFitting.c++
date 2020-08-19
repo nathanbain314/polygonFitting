@@ -1291,9 +1291,10 @@ void decimateHelper( Polygon &P, double epsilon )
 
       Vertex v3 = P.vertices[P.edges[j].v2];
 
-      if( distanceToLine( v2, v1, v3 ) <= epsilon && !(firstRemoved && i == edgeSize - 1) )
+      if( distanceToLine( v2, v1, v3 ) <= epsilon && !(firstRemoved && j == 0 ) )
       {
         if( i == 0 ) firstRemoved = true;
+        if( j == 0 ) edges.erase(edges.begin());
 
         ++i;
 
@@ -1313,41 +1314,6 @@ void decimateHelper( Polygon &P, double epsilon )
 
     P.edges.swap(edges);
     P.vertices.swap(vertices);
-
-    for( int i = P.edges.size()-1; i >= 0; --i )
-    {
-      break;
-      Vertex v1 = P.vertices[P.edges[i].v1];
-      Vertex v2 = P.vertices[P.edges[i].v2];
-
-      if( v1 == v2 )
-      {
-        P.edges.erase(P.edges.begin()+i);
-        removed = true;
-      }
-    }
-
-    for( int i = P.edges.size()-1; i >= 0; --i )
-    {
-      break;
-      Vertex v1 = P.vertices[P.edges[i].v1];
-      Vertex v2 = P.vertices[P.edges[i].v2];
-
-      for( int j = P.edges.size()-1; j >= 0; --j )
-      {
-        if( i == j ) continue;
-
-        Vertex v3 = P.vertices[P.edges[j].v1];
-        Vertex v4 = P.vertices[P.edges[j].v2];
-
-        if( ( v1 == v3 && v2 == v4 ) || ( v1 == v4 && v2 == v3 ) )
-        {
-          P.edges.erase(P.edges.begin()+max(i,j));
-          removed = true;
-          break;
-        }
-      }
-    }
   }
 }
 

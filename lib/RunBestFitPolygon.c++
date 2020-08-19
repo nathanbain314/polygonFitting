@@ -13,7 +13,7 @@ int main( int argc, char **argv )
 
     ValueArg<float> angleOffsetArg( "a", "angleOffset", "Angel offset value", false, 360.0, "float", cmd);
 
-    ValueArg<float> decimateValueArg( "d", "decimate", "Decimate value", false, 1.0, "float", cmd);
+    ValueArg<float> decimateValueArg( "d", "decimate", "Decimate value", false, 0.0, "float", cmd);
 
     ValueArg<string> outputArg( "o", "output", "Output name", true, "out", "string", cmd);
 
