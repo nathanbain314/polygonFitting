@@ -30,7 +30,7 @@ void test2( Polygon &R )
   R.addEdge(3,0);
 }
 
-void BestFitPolygon( string interiorName, string boundingName, string outputName, double decimateValue, double angleOffset, double resize )
+void BestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float resize )
 {
   Polygon P, P2, R;
 
@@ -71,7 +71,7 @@ void BestFitPolygon( string interiorName, string boundingName, string outputName
 
 
 
-  double scale, rotation;
+  float scale, rotation;
 
   Vertex offset;
 
@@ -93,7 +93,7 @@ void BestFitPolygon( string interiorName, string boundingName, string outputName
 //  drawImage( interiorName, R, scale, rotation, offset, outputName, resize );
 }
 
-void RunBestFitPolygon( string interiorName, string boundingName, string outputName, double decimateValue, double angleOffset, double resize )
+void RunBestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float resize )
 {
   BestFitPolygon( interiorName, boundingName, outputName, decimateValue, angleOffset, resize );
 }
