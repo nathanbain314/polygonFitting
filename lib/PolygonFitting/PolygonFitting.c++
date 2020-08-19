@@ -1219,6 +1219,7 @@ void concavePolygonFromAlphaImage( Polygon &P, string imageName, float resize )
     }
 
     P.offsetBy(origin);
+    P.scaleBy(0.5);
   }
   else
   {
