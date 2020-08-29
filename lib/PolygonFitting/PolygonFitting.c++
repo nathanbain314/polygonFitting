@@ -195,6 +195,9 @@ void PolygonFitting::computeContributingEdges()
 
   vector< Vertex >::iterator it;
 
+  int starti, startbestVertex;
+  Vertex startv1, startv2;
+
   for( int i2 = 0; i2 <= R.edges.size(); ++i2 )
   {
     int i = i2 % R.edges.size();
@@ -220,66 +223,137 @@ void PolygonFitting::computeContributingEdges()
     v1 = v1.offset( P.vertices[bestVertex] );
     v2 = v2.offset( P.vertices[bestVertex] );
 
-    if( i2 > 0 )
+    if( R.vertices[ R.edges[(i-1+R.edges.size())%R.edges.size()].v2 ] == R.vertices[ R.edges[i].v1 ] )
     {
-      int s = P.vertices.size();
-
-      int s2 = contributingEdges.size();
-
-      int prevVertex = verticesUsed[s2-1];
-
-      Vertex v3 = vertices[contributingEdges[s2-1].v1];
-      Vertex v4 = vertices[contributingEdges[s2-1].v2];
-
-      pair< float, float > t = intersection( v3, v4, v1, v2 );
-    
-      if( t.first >= 1+0.0000000 || t.first <= -0.0000000 || t.second >= 1+0.0000000 || t.second <= -0.0000000 )
+      if( i2 > 0 )
       {
-        int direction = -1;
+        int s = P.vertices.size();
 
-        Vertex p1 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex - 1 + s ) % s ] );
-        Vertex p2 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex + 1 + s ) % s ] );
+        int s2 = contributingEdges.size();
 
-        for( int k = prevVertex; k != bestVertex; k = ( k + direction + s ) % s )
+        int prevVertex = verticesUsed[verticesUsed.size()-1];
+
+        Vertex v3 = vertices[contributingEdges[s2-1].v1];
+        Vertex v4 = vertices[contributingEdges[s2-1].v2];
+
+        pair< float, float > t = intersection( v3, v4, v1, v2 );
+      
+        if( t.first >= 1+0.0000000 || t.first <= -0.0000000 || t.second >= 1+0.0000000 || t.second <= -0.0000000 )
         {
-          Vertex vv1 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[k] );
+          int direction = -1;
 
-          vertices.push_back( vv1 );
+          Vertex p1 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex - 1 + s ) % s ] );
+          Vertex p2 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( prevVertex + 1 + s ) % s ] );
 
-          Vertex vv2 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( k + direction + s ) % s] );
+          for( int k = prevVertex; k != bestVertex; k = ( k + direction + s ) % s )
+          {
+            Vertex vv1 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[k] );
 
-          vertices.push_back( vv2 );
+            vertices.push_back( vv1 );
+
+            Vertex vv2 = R.vertices[ R.edges[i].v1 ].offset( P.vertices[( k + direction + s ) % s] );
+
+            vertices.push_back( vv2 );
+
+            contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+
+            verticesUsed.push_back( ( k + direction + s ) % s );
+
+            edgeOffsets.push_back( P.vertices[k] );
+            edgeOffsets.push_back( P.vertices[( k + direction + s ) % s] );
+          }
+        }
+        else if( prevVertex != bestVertex )
+        {
+          vertices.push_back( R.vertices[ R.edges[i].v1 ].offset( P.vertices[prevVertex] ) );
+          vertices.push_back( R.vertices[ R.edges[i].v1 ] );
 
           contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
 
-          verticesUsed.push_back( ( k + direction + s ) % s );
+          verticesUsed.push_back( prevVertex );
 
-          edgeOffsets.push_back( P.vertices[k] );
-          edgeOffsets.push_back( P.vertices[( k + direction + s ) % s] );
+          edgeOffsets.push_back( P.vertices[prevVertex] );
+          edgeOffsets.push_back( Vertex( 0, 0 ) );
+
+          vertices.push_back( R.vertices[ R.edges[i].v1 ] );
+          vertices.push_back( R.vertices[ R.edges[i].v1 ].offset( P.vertices[bestVertex] ) );
+
+          contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+
+          verticesUsed.push_back( bestVertex );
+
+          edgeOffsets.push_back( Vertex( 0, 0 ) );
+          edgeOffsets.push_back( P.vertices[bestVertex] );
         }
       }
-      else if( prevVertex != bestVertex )
+    }
+    else
+    {
+      if( i2 > 0 )
       {
-        vertices.push_back( R.vertices[ R.edges[i].v1 ].offset( P.vertices[prevVertex] ) );
-        vertices.push_back( R.vertices[ R.edges[i].v1 ] );
+        int s = P.vertices.size();
 
-        contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+        int s2 = contributingEdges.size();
 
-        verticesUsed.push_back( prevVertex );
+        int prevVertex = verticesUsed[verticesUsed.size()-1];
 
-        edgeOffsets.push_back( P.vertices[prevVertex] );
-        edgeOffsets.push_back( Vertex( 0, 0 ) );
+        Vertex v3 = vertices[contributingEdges[s2-1].v1];
+        Vertex v4 = vertices[contributingEdges[s2-1].v2];
 
-        vertices.push_back( R.vertices[ R.edges[i].v1 ] );
-        vertices.push_back( R.vertices[ R.edges[i].v1 ].offset( P.vertices[bestVertex] ) );
+        pair< float, float > t = intersection( v3, v4, startv1, startv2 );
+      
+        if( t.first >= 1+0.0000000 || t.first <= -0.0000000 || t.second >= 1+0.0000000 || t.second <= -0.0000000 )
+        {
+          int direction = -1;
 
-        contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+          Vertex p1 = R.vertices[ R.edges[starti].v1 ].offset( P.vertices[( prevVertex - 1 + s ) % s ] );
+          Vertex p2 = R.vertices[ R.edges[starti].v1 ].offset( P.vertices[( prevVertex + 1 + s ) % s ] );
 
-        verticesUsed.push_back( bestVertex );
+          for( int k = prevVertex; k != startbestVertex; k = ( k + direction + s ) % s )
+          {
+            Vertex vv1 = R.vertices[ R.edges[starti].v1 ].offset( P.vertices[k] );
 
-        edgeOffsets.push_back( Vertex( 0, 0 ) );
-        edgeOffsets.push_back( P.vertices[bestVertex] );
+            vertices.push_back( vv1 );
+
+            Vertex vv2 = R.vertices[ R.edges[starti].v1 ].offset( P.vertices[( k + direction + s ) % s] );
+
+            vertices.push_back( vv2 );
+
+            contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+
+            verticesUsed.push_back( ( k + direction + s ) % s );
+
+            edgeOffsets.push_back( P.vertices[k] );
+            edgeOffsets.push_back( P.vertices[( k + direction + s ) % s] );
+          }
+        }
+        else if( prevVertex != startbestVertex )
+        {
+          vertices.push_back( R.vertices[ R.edges[starti].v1 ].offset( P.vertices[prevVertex] ) );
+          vertices.push_back( R.vertices[ R.edges[starti].v1 ] );
+
+          contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+
+          verticesUsed.push_back( prevVertex );
+
+          edgeOffsets.push_back( P.vertices[prevVertex] );
+          edgeOffsets.push_back( Vertex( 0, 0 ) );
+
+          vertices.push_back( R.vertices[ R.edges[starti].v1 ] );
+          vertices.push_back( R.vertices[ R.edges[starti].v1 ].offset( P.vertices[startbestVertex] ) );
+
+          contributingEdges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+
+          verticesUsed.push_back( startbestVertex );
+
+          edgeOffsets.push_back( Vertex( 0, 0 ) );
+          edgeOffsets.push_back( P.vertices[startbestVertex] );
+        }
       }
+      starti = i;
+      startv1 = v1;
+      startv2 = v2;
+      startbestVertex = bestVertex;
     }
 
     if( i2 == R.edges.size() ) continue;
