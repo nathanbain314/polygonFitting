@@ -54,7 +54,7 @@ Polygons can either be created manually or by generating it from an image.
     findBestFit( innerPolygon, outerPolygon, scale, rotation, offset, angleOffsetInDegrees );
 
 This can work on any type of polygon: convex, concave, and even with a hole by using counter clockwise interior edges.
-![Large Earth](http://nathanbain.com/wikiImages/RunBestFitPolygon/bestFit.png)
+![Best fit](http://nathanbain.com/wikiImages/RunBestFitPolygon/bestFit.png)
 The final input to the function, marked angleOffsetInDegrees, defines the angle that the interior polygon is rotated by before computing the next best fit. The smaller the angle, the greater the fit. However, the time it takes to compute the best fit is inversely proportional to the angleOffsetInDegrees.
-
-![Large Earth](http://nathanbain.com/wikiImages/RunBestFitPolygon/angleOffset.png)
+Below is the same polygon with offsets 360 (, 30, 1
+![Angle Offset](http://nathanbain.com/wikiImages/RunBestFitPolygon/angleOffset.png)
