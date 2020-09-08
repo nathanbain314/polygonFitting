@@ -5,7 +5,7 @@
 This is a tool to find the largest possible scale and best fit of a convex polygon inside of another polygon. 
 # Usage
 ## Creating polygons
-Polygons can either be created manually or by generating it from an image.
+Polygons can either be created manually or by generating it from an image using the alpha channel to find the edge.
 #### Manually
 
     // Initialize Polygon
@@ -39,11 +39,10 @@ Polygons can either be created manually or by generating it from an image.
     decimate(P,0.01);
 ![Concave Polygon](http://nathanbain.com/wikiImages/RunBestFitPolygon/concavePolygon.png)
   #### Decimating 
-  Decimating the polygon removes unnecessary vertices while retaining the general shape of the polygon. This increases the speed greatly since the algorithm 
-  ![Manual Polygon](http://nathanbain.com/wikiImages/RunBestFitPolygon/decimatePolygon.png)
+  Decimating the polygon removes unnecessary vertices while retaining the general shape of the polygon. This allows for a huge speedup while creating approximately the same output.
+  ![Decimate Polygon](http://nathanbain.com/wikiImages/RunBestFitPolygon/decimatePolygon.png)
   #### Clockwise
-  Polygons have to be in clockwise shape in order for the algorithm to work
-  The edges of the polygon have to be ordered in the clockwise direction. Creating from an image will already do that but otherwise it can be made clockwise with `P.makeClockwise();`
+  Polygons have to be in clockwise shape in order for the algorithm to work. Creating from an image will already do that but otherwise it can be made clockwise with `P.makeClockwise();`
 
 #### Best fit polygon
 
