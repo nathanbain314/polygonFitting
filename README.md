@@ -57,3 +57,14 @@ This can work on any type of polygon: convex, concave, and even with a hole by u
 The final input to the function, marked angleOffsetInDegrees, defines the angle that the interior polygon is rotated by before computing the next best fit. The smaller the angle, the greater the fit. However, the time it takes to compute the best fit is inversely proportional to the angleOffsetInDegrees.
 Below is the same polygon with offsets 360 (1 rotation), 30 (12 rotations), and 1 (360 rotations)
 ![Angle Offset](http://nathanbain.com/wikiImages/RunBestFitPolygon/angleOffset.png)
+
+# RunBestFitPolygon
+Building this repository creates an executable to test out the polygon fitting function. 
+## options
+- -i,  --interior : The interior poylgon image
+- -b, --bounding : The bounding polygon image
+- -o, --output : The output image name
+- -d, --decimate : Decimate value. A value of 0.01 usually works the best
+- -a, --angleOffset : Value to offset poylgon by multiple times while computing the best fit.
+- r, --resize : Multiplier to resize the output image by.
+
