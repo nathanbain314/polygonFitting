@@ -385,13 +385,13 @@ bool validPoint( Vertex p, Vertex v1, Vertex v2 )
   return p.y <= v1.y && p.y <= v2.y && p != v1 && p != v2;
 }
 
-int windingNumber( Vertex p, vector< Vertex > &windingVertices )
+bool windingNumber( Vertex p, vector< Vertex > &windingVertices )
 {
   int n = 0;
 
   int s = windingVertices.size();
 
-  for( int i = 0; i < s; ++i )
+  for( int i = 0; i < s; i += 2 )
   {
     Vertex &v1 = windingVertices[i];
     Vertex &v2 = windingVertices[(i+1)%s];
@@ -412,7 +412,7 @@ int windingNumber( Vertex p, vector< Vertex > &windingVertices )
     }
   }
 
-  return n;
+  return n == -1;
 }
 
 bool PolygonFitting::isValidFit( Vertex &c )
@@ -462,46 +462,28 @@ bool PolygonFitting::isValidFit( Vertex &c )
 
       Vertex p = intersectionPoint( t.first, v1, v2 );
 
-      Vertex points[4] = { midpoint( v1, v3 ), midpoint( v2, v3 ), midpoint( v1, v4 ), midpoint( v2, v4 ) };
-
-      bool valid[4] = { validPoint( p, v1, v3 ), validPoint( p, v2, v3 ), validPoint( p, v1, v4 ), validPoint( p, v2, v4 ) };
-
-      for( int k = 0; k < 4; ++k )
+      if( validPoint( p, v1, v3 ) )
       {
-        if( !valid[k] ) continue;
+        Vertex m = midpoint( v1, v3 );
+        Vertex p2 = intersectionPoint( 0.0001, p, m );
 
-        bool closestPointChosen = false;
-        float closestDistance = 1000000000;
-
-        
-        for( int i2 = 0; i2 < contributingEdges.size(); ++i2 )
-        {
-          if( i2 == i || i2 == j ) continue;
-
-          Vertex &v5 = vertices[contributingEdges[i2].v1];
-          Vertex &v6 = vertices[contributingEdges[i2].v2];
-
-          pair< float, float > t2 = intersection( p, points[k], v5, v6 );
-
-          if( t2.second < 0 || t2.second > 1 ) continue;
-
-          if( t2.first > 0 && t2.first < closestDistance )
-          {
-            closestPointChosen = true;
-            closestDistance = t2.first;
-          }
-        }
-        
-        if( !closestPointChosen ) continue;
-
-        Vertex p2 = intersectionPoint( closestDistance/2, p, points[k] );
-
-        int w = windingNumber( p2, vertices );
-
-        if( w == -1 )
+        if( windingNumber( p2, vertices ) )
         {
           c = p2;
 
+          return true;
+        }
+      }
+
+      if( validPoint( p, v2, v3 ) )
+      {
+        Vertex m = midpoint( v2, v3 );
+        Vertex p2 = intersectionPoint( 0.0001, p, m );
+
+        if( windingNumber( p2, vertices ) )
+        {
+          c = p2;
+          
           return true;
         }
       }
