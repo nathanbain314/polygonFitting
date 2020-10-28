@@ -461,7 +461,7 @@ bool PolygonFitting::isValidFit( Vertex &c )
       }
 
       Vertex p = intersectionPoint( t.first, v1, v2 );
-
+/*
       if( validPoint( p, v1, v3 ) )
       {
         Vertex m = midpoint( v1, v3 );
@@ -484,6 +484,27 @@ bool PolygonFitting::isValidFit( Vertex &c )
         {
           c = p2;
           
+          return true;
+        }
+      }
+      */
+
+      Vertex points[4] = { midpoint( v1, v3 ), midpoint( v2, v3 ), midpoint( v1, v4 ), midpoint( v2, v4 ) };
+
+      bool valid[4] = { validPoint( p, v1, v3 ), validPoint( p, v2, v3 ), validPoint( p, v1, v4 ), validPoint( p, v2, v4 ) };
+
+      for( int k = 0; k < 4; ++k )
+      {
+        if( !valid[k] ) continue;
+
+        Vertex p2 = intersectionPoint( 0.0001, p, points[k] );
+
+//        int w = windingNumber( p2, vertices );
+
+        if( windingNumber( p2, vertices ) )
+        {
+          c = p2;
+
           return true;
         }
       }
@@ -692,6 +713,7 @@ void drawImage( Polygon P, Polygon R, float scale, float rotation, Vertex offset
 
   for( int i = 0; i < P.edges.size(); ++i )
   {
+    break;
     Vertex v1 = P.vertices[P.edges[i].v1];
     Vertex v2 = P.vertices[P.edges[i].v2];
 
