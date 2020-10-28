@@ -350,11 +350,12 @@ void PolygonFitting::computeContributingEdges()
           edgeOffsets.push_back( P.vertices[startbestVertex] );
         }
       }
-      starti = i;
-      startv1 = v1;
-      startv2 = v2;
-      startbestVertex = bestVertex;
     }
+
+    starti = i;
+    startv1 = v1;
+    startv2 = v2;
+    startbestVertex = bestVertex;
 
     if( i2 == R.edges.size() ) continue;
 
@@ -462,28 +463,20 @@ bool PolygonFitting::isValidFit( Vertex &c )
 
       Vertex p = intersectionPoint( t.first, v1, v2 );
 
-      if( validPoint( p, v1, v3 ) )
+      Vertex points[4] = { midpoint( v1, v3 ), midpoint( v2, v3 ), midpoint( v1, v4 ), midpoint( v2, v4 ) };
+
+      bool valid[4] = { validPoint( p, v1, v3 ), validPoint( p, v2, v3 ), validPoint( p, v1, v4 ), validPoint( p, v2, v4 ) };
+
+      for( int k = 0; k < 4; ++k )
       {
-        Vertex m = midpoint( v1, v3 );
-        Vertex p2 = intersectionPoint( 0.0001, p, m );
+        if( !valid[k] ) continue;
+
+        Vertex p2 = intersectionPoint( 0.0001, p, points[k] );
 
         if( windingNumber( p2, vertices ) )
         {
           c = p2;
 
-          return true;
-        }
-      }
-
-      if( validPoint( p, v2, v3 ) )
-      {
-        Vertex m = midpoint( v2, v3 );
-        Vertex p2 = intersectionPoint( 0.0001, p, m );
-
-        if( windingNumber( p2, vertices ) )
-        {
-          c = p2;
-          
           return true;
         }
       }
