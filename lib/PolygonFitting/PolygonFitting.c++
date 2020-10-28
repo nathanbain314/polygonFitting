@@ -350,11 +350,12 @@ void PolygonFitting::computeContributingEdges()
           edgeOffsets.push_back( P.vertices[startbestVertex] );
         }
       }
-      starti = i;
-      startv1 = v1;
-      startv2 = v2;
-      startbestVertex = bestVertex;
     }
+
+    starti = i;
+    startv1 = v1;
+    startv2 = v2;
+    startbestVertex = bestVertex;
 
     if( i2 == R.edges.size() ) continue;
 
@@ -461,33 +462,6 @@ bool PolygonFitting::isValidFit( Vertex &c )
       }
 
       Vertex p = intersectionPoint( t.first, v1, v2 );
-/*
-      if( validPoint( p, v1, v3 ) )
-      {
-        Vertex m = midpoint( v1, v3 );
-        Vertex p2 = intersectionPoint( 0.0001, p, m );
-
-        if( windingNumber( p2, vertices ) )
-        {
-          c = p2;
-
-          return true;
-        }
-      }
-
-      if( validPoint( p, v2, v3 ) )
-      {
-        Vertex m = midpoint( v2, v3 );
-        Vertex p2 = intersectionPoint( 0.0001, p, m );
-
-        if( windingNumber( p2, vertices ) )
-        {
-          c = p2;
-          
-          return true;
-        }
-      }
-      */
 
       Vertex points[4] = { midpoint( v1, v3 ), midpoint( v2, v3 ), midpoint( v1, v4 ), midpoint( v2, v4 ) };
 
@@ -498,8 +472,6 @@ bool PolygonFitting::isValidFit( Vertex &c )
         if( !valid[k] ) continue;
 
         Vertex p2 = intersectionPoint( 0.0001, p, points[k] );
-
-//        int w = windingNumber( p2, vertices );
 
         if( windingNumber( p2, vertices ) )
         {
@@ -713,7 +685,6 @@ void drawImage( Polygon P, Polygon R, float scale, float rotation, Vertex offset
 
   for( int i = 0; i < P.edges.size(); ++i )
   {
-    break;
     Vertex v1 = P.vertices[P.edges[i].v1];
     Vertex v2 = P.vertices[P.edges[i].v2];
 
