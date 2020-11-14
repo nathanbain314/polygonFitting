@@ -30,7 +30,7 @@ void test2( Polygon &R )
   R.addEdge(3,0);
 }
 
-void BestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float resize )
+void BestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float maxAngle, float resize )
 {
   Polygon P, P2, R;
 
@@ -79,7 +79,7 @@ void BestFitPolygon( string interiorName, string boundingName, string outputName
 
 //  std::chrono::system_clock::time_point begin = std::chrono::system_clock::now();
 
-  findBestFit( P, R, scale, rotation, offset, angleOffset, 0 );
+  findBestFit( P, R, scale, rotation, offset, angleOffset, maxAngle );
 
 //  std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 //  std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count()/1000000000.0 <<std::endl;
@@ -93,7 +93,7 @@ void BestFitPolygon( string interiorName, string boundingName, string outputName
 //  drawImage( interiorName, R, scale, rotation, offset, outputName, resize );
 }
 
-void RunBestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float resize )
+void RunBestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float maxAngle, float resize )
 {
-  BestFitPolygon( interiorName, boundingName, outputName, decimateValue, angleOffset, resize );
+  BestFitPolygon( interiorName, boundingName, outputName, decimateValue, angleOffset, maxAngle, resize );
 }

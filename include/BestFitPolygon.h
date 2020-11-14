@@ -20,4 +20,4 @@
 using namespace vips;
 using namespace std;
 
-void RunBestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float resize );
+void RunBestFitPolygon( string interiorName, string boundingName, string outputName, float decimateValue, float angleOffset, float maxAngle, float resize );

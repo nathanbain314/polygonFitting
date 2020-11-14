@@ -11,7 +11,9 @@ int main( int argc, char **argv )
 
     ValueArg<float> resizeArg( "r", "resize", "Resize output value", false, 1.0, "float", cmd);
 
-    ValueArg<float> angleOffsetArg( "a", "angleOffset", "Angel offset value", false, 360.0, "float", cmd);
+    ValueArg<float> maxAngleArg( "m", "maxAngle", "Maximum angle value", false, 360.0, "float", cmd);
+
+    ValueArg<float> angleOffsetArg( "a", "angleOffset", "Angle offset value", false, 360.0, "float", cmd);
 
     ValueArg<float> decimateValueArg( "d", "decimate", "Decimate value", false, 0.0, "float", cmd);
 
@@ -28,11 +30,12 @@ int main( int argc, char **argv )
     string outputName                 = outputArg.getValue();
     float decimateValue               = decimateValueArg.getValue();
     float angleOffset                 = angleOffsetArg.getValue();
+    float maxAngle                    = maxAngleArg.getValue();
     float resize                      = resizeArg.getValue();
 
     if( VIPS_INIT( argv[0] ) ) return( -1 );
 
-    RunBestFitPolygon( interiorName, boundingName, outputName, decimateValue, angleOffset, resize );
+    RunBestFitPolygon( interiorName, boundingName, outputName, decimateValue, angleOffset, maxAngle, resize );
   }
   catch (ArgException &e)  // catch any exceptions
   {
