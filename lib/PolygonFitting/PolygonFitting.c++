@@ -350,12 +350,12 @@ void PolygonFitting::computeContributingEdges()
           edgeOffsets.push_back( P.vertices[startbestVertex] );
         }
       }
-    }
 
-    starti = i;
-    startv1 = v1;
-    startv2 = v2;
-    startbestVertex = bestVertex;
+      starti = i;
+      startv1 = v1;
+      startv2 = v2;
+      startbestVertex = bestVertex;
+    }
 
     if( i2 == R.edges.size() ) continue;
 
@@ -631,7 +631,7 @@ void findBestFit( Polygon P, Polygon R, float &scale, float &rotation, Vertex &o
     maxR = r;
   }
 
-  P.rotateBy(360.0-maxR);
+  P.rotateBy(360.0-maxR-rotationOffset);
 
   maxAngle = min( maxAngle, 179.9f );
 
@@ -928,13 +928,15 @@ void removeExtrasP( Polygon &P, float epsilon )
   }
 }
 
-void floodFill1( int *filled, unsigned char *data, int width, int height )
+int floodFill1( int *filled, unsigned char *data, int width, int height )
 {
+  bool valid[width*height];
   for( int i = 0, p = 0; i < height; ++i )
   {
     for( int j = 0; j < width; ++j, ++p )
     {
-      filled[p] = (data[p] > 40)?1:0;
+      valid[p] = (data[p] > 40)?1:0;
+      filled[p] = -1;
     }
   }
 
@@ -942,76 +944,122 @@ void floodFill1( int *filled, unsigned char *data, int width, int height )
 
   for( int i = 0; i < width; ++i )
   {
-    if( filled[i] == 0 )
+    if( !valid[i] )
     {
       valuesToCheck.insert( i );
+      filled[i] = 0;
     }
-    if( filled[(height-1)*width+i] == 0 )
+    if( !valid[(height-1)*width+i] )
     {
       valuesToCheck.insert( (height-1)*width+i );
+      filled[(height-1)*width+i] = 0;
     }
   }
 
   for( int i = 0; i < height; ++i )
   {
-    if( filled[i*width] == 0 )
+    if( !valid[i*width] )
     {
       valuesToCheck.insert( i*width );
+      filled[i*width] = 0;
     }
-    if( filled[i*width+width-1] == 0 )
+    if( !valid[i*width+width-1] )
     {
       valuesToCheck.insert( i*width+width-1 );
+      filled[i*width+width-1] = 0;
     }
   }
 
-  bool hasUpdated = true;
+  int side = 0;
 
-  set< int >::iterator start = valuesToCheck.begin(), end = valuesToCheck.end();
-
-  while( hasUpdated )
+  for( int iter = 0; iter < 100; ++iter )
   {
-    hasUpdated = false;
+    set< int >::iterator start = valuesToCheck.begin(), end = valuesToCheck.end();
 
-    set< int > valuesToCheckTemp;
+    bool hasUpdated = true;
 
-    for( ; start != end; ++start )
+    while( hasUpdated )
     {
-      int p = *start;
+      hasUpdated = false;
 
-      if( p%width > 0 && filled[ p-1 ] == 0 )
+      set< int > valuesToCheckTemp;
+
+      for( ; start != end; ++start )
       {
-        valuesToCheckTemp.insert(p-1);
-        filled[p-1] = 2;
-        hasUpdated = true;
+        int p = *start;
+
+        if( p%width > 0 && valid[ p-1 ] == side%2 && filled[p-1] < 0 )
+        {
+          valuesToCheckTemp.insert(p-1);
+          filled[p-1] = side;
+          hasUpdated = true;
+        }
+
+        if( p%width < width-1 && valid[ p+1 ] == side%2 && filled[p+1] < 0 )
+        {
+          valuesToCheckTemp.insert(p+1);
+          filled[p+1] = side;
+          hasUpdated = true;
+        }
+
+        if( p > width-1 && valid[ p-width ] == side%2 && filled[p-width] < 0 )
+        {
+          valuesToCheckTemp.insert(p-width);
+          filled[p-width] = side;
+          hasUpdated = true;
+        }
+
+        if( p < width*(height-1)-1 && valid[ p+width ] == side%2 && filled[p+width] < 0 )
+        {
+          valuesToCheckTemp.insert(p+width);
+          filled[p+width] = side;
+          hasUpdated = true;
+        }
       }
 
-      if( p%width < width-1 && filled[ p+1 ] == 0 )
-      {
-        valuesToCheckTemp.insert(p+1);
-        filled[p+1] = 2;
-        hasUpdated = true;
-      }
+      valuesToCheck = valuesToCheckTemp;
 
-      if( p > width-1 && filled[ p-width ] == 0 )
-      {
-        valuesToCheckTemp.insert(p-width);
-        filled[p-width] = 2;
-        hasUpdated = true;
-      }
+      start = valuesToCheck.begin();
+      end = valuesToCheck.end();
+    }
 
-      if( p < width*(height-1)-1 && filled[ p+width ] == 0 )
+    valuesToCheck.clear();
+
+    ++side;
+
+    for( int i = 0, p = 0; i < height; ++i )
+    {
+      for( int j = 0; j < width; ++j, ++p )
       {
-        valuesToCheckTemp.insert(p+width);
-        filled[p+width] = 2;
-        hasUpdated = true;
+        if( filled[p] >= 0 ) continue;
+
+        if( j > 0 && filled[p-1] == side-1 )
+        {
+          filled[p] = side;
+          valuesToCheck.insert(p);
+        }
+        else if( j < width-1 && filled[p+1] == side-1 )
+        {
+          filled[p] = side;
+          valuesToCheck.insert(p);
+        }
+        else if( i > 0 && filled[p-width] == side-1 )
+        {
+          filled[p] = side;
+          valuesToCheck.insert(p);
+        }
+        else if( i < height-1 && filled[p+width] == side-1 )
+        {
+          filled[p] = side;
+          valuesToCheck.insert(p);
+        }
       }
     }
 
-    valuesToCheck = valuesToCheckTemp;
-
-    start = valuesToCheck.begin();
-    end = valuesToCheck.end();
+    if( valuesToCheck.size() == 0 ) break;
   }
+
+  return side;
 }
 
 void floodFill2( int *filled, int width, int height, int startP, int n )
@@ -1066,6 +1114,253 @@ void floodFill2( int *filled, int width, int height, int startP, int n )
   }
 }
 
+void floodFill3( int *filled, bool *valid, int width, int height, int startP )
+{
+  int n = filled[startP];
+
+  valid[startP] = true;
+
+  set< int > valuesToCheck;
+
+  valuesToCheck.insert(startP);
+
+  bool hasUpdated = true;
+
+  set< int >::iterator start = valuesToCheck.begin(), end = valuesToCheck.end();
+
+  while( hasUpdated )
+  {
+    hasUpdated = false;
+
+    for( ; start != end; ++start )
+    {
+      int p = *start;
+
+      if( p%width > 0 && filled[ p-1 ] == n )
+      {
+        valuesToCheck.insert(p-1);
+        valid[p-1] = true;
+        filled[ p-1 ] = 0;
+        hasUpdated = true;
+      }
+
+      if( p%width < width-1 && filled[ p+1 ] == n )
+      {
+        valuesToCheck.insert(p+1);
+        valid[p+1] = true;
+        filled[ p+1 ] = 0;
+        hasUpdated = true;
+      }
+
+      if( p > width-1 && filled[ p-width ] == n )
+      {
+        valuesToCheck.insert(p-width);
+        valid[p-width] = true;
+        filled[ p-width ] = 0;
+        hasUpdated = true;
+      }
+
+      if( p < width*(height-1)-1 && filled[ p+width ] == n )
+      {
+        valuesToCheck.insert(p+width);
+        valid[p+width] = true;
+        filled[ p+width ] = 0;
+        hasUpdated = true;
+      }
+    }
+
+    start = valuesToCheck.begin();
+    end = valuesToCheck.end();
+  }
+}
+
+void concaveVertices( int *filled, Polygon &P, int width, int height )
+{
+  int width2 = width*2;
+  int height2 = height*2;
+
+  bool *valid = new bool[width*height];
+  bool *valid2 = new bool[width2*height2];
+
+  int count = 0;
+
+  for( int p = 0; p < width*height; ++p )
+  {
+    if( filled[p] <= 0 ) continue;
+
+    bool doSwitchDirection = filled[p]%2;
+
+    for( int p = 0; p < width*height; ++p )
+    {
+      valid[p] = false;
+    }
+
+    floodFill3( filled, valid, width, height, p );
+
+    for( int i = 0, p = 0; i < height; ++i )
+    {
+      for( int j = 0; j < width; ++j, ++p )
+      {
+        bool g = valid[p];
+
+        valid2[(2*i+0)*2*width+2*j+0] = g;
+        valid2[(2*i+1)*2*width+2*j+0] = g;
+        valid2[(2*i+0)*2*width+2*j+1] = g;
+        valid2[(2*i+1)*2*width+2*j+1] = g;
+      }
+    }
+
+    int direction = 0;
+
+    int dOffsets[4][2] = {
+      {1,0},
+      {0,1},
+      {-1,0},
+      {0,-1}
+    };
+
+    int px, py;
+
+    for( int p = 0; p < width2*height2; ++p )
+    {
+      if( valid2[p] )
+      {
+        px = p % width2;
+        py = p / width2;
+
+        break;
+      }
+    }
+    
+    int ipx = px;
+    int ipy = py;
+    int npx=-1, npy=-1;
+
+    vector< Vertex > vertices;
+    vector< Edge > edges;
+
+    while( npx != ipx || npy != ipy )
+    {
+      for( ; ; direction=(direction+1)%4 )
+      {
+        npx = px+dOffsets[direction][0];
+        npy = py+dOffsets[direction][1];
+
+        if( valid2[ npy*width2 + npx ] )
+        {
+          break;
+        }
+      }
+
+      direction = (direction+3)%4;
+
+      vertices.push_back( Vertex(px,py) );
+      vertices.push_back( Vertex(npx,npy) );
+      edges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
+
+      px = npx;
+      py = npy;
+    }
+
+    for( int k1 = 0; k1 < edges.size(); ++k1 )
+    {
+      for( int k2 = k1+1; k2 < edges.size(); ++k2 )
+      {
+        if( ( vertices[ edges[k1].v1 ] == vertices[ edges[k2].v1 ] && vertices[ edges[k1].v2 ] == vertices[ edges[k2].v2 ] ) || ( vertices[ edges[k1].v1 ] == vertices[ edges[k2].v2 ] && vertices[ edges[k1].v2 ] == vertices[ edges[k2].v1 ] ) )
+        {
+          edges.erase( edges.begin() + k2 );
+          edges.erase( edges.begin() + k1 );
+          --k1;
+          break;
+        }
+      }
+    }
+
+    if( doSwitchDirection )
+    {
+      for( int i = 0; i < vertices.size()/2; ++i )
+      {
+        Vertex t = vertices[i];
+        vertices[i] = vertices[vertices.size() - 1 - i];
+        vertices[vertices.size() - 1 - i] = t;
+      }
+    }
+
+    for( int i = 0; i < edges.size(); ++i )
+    {
+      Vertex v1 = vertices[edges[i].v1];
+      Vertex v2 = vertices[edges[i].v2];
+
+      P.addVertex(v1);
+      P.addVertex(v2);
+      P.addEdge(P.vertices.size()-2,P.vertices.size()-1);
+    }
+
+    ++count;
+  }
+
+  delete[] valid;
+  delete[] valid2;
+}
+
+void removeParallel( Polygon &P )
+{
+  vector< int > indices(P.vertices.size());
+
+  for( int i = 0; i < P.vertices.size(); ++i )
+  {
+    indices[i] = find(P.vertices.begin(),P.vertices.end(),P.vertices[i]) - P.vertices.begin();
+  }
+
+  for( int i = 0; i < P.edges.size(); ++i )
+  {
+    P.edges[i].v1 = indices[P.edges[i].v1];
+    P.edges[i].v2 = indices[P.edges[i].v2];
+  }
+
+  for( bool removed = true; removed;  )
+  {
+    removed = false;
+
+    int edgeSize = P.edges.size();
+
+    vector< Vertex > vertices;
+    vector< Edge > edges;
+
+    bool firstRemoved = false;
+
+    for( int i = 0; i < edgeSize; ++i )
+    {
+      Vertex v1 = P.vertices[P.edges[i].v1];
+      Vertex v2 = P.vertices[P.edges[i].v2];
+
+      int j = (i+1)%edgeSize;
+
+      Vertex v3 = P.vertices[P.edges[j].v2];
+
+      if( ( ( v1.x == v2.x && v2.x == v3.x ) || ( v1.y == v2.y && v2.y == v3.y ) ) && v2 == P.vertices[P.edges[j].v1] )
+      {
+        ++i;
+
+        removed = true;
+
+        vertices.push_back( v1 );
+        vertices.push_back( v3 );
+        edges.push_back(Edge(vertices.size()-2,vertices.size()-1));
+      }
+      else
+      {
+        vertices.push_back( v1 );
+        vertices.push_back( v2 );
+        edges.push_back(Edge(vertices.size()-2,vertices.size()-1));
+      }
+    }
+
+    P.edges.swap(edges);
+    P.vertices.swap(vertices);
+  }
+}
+
 void concavePolygonFromAlphaImage( Polygon &P, string imageName, float resize )
 {
   VImage image = VImage::vipsload((char *)imageName.c_str()).autorot().colourspace(VIPS_INTERPRETATION_sRGB);//.resize(1.0/resize);
@@ -1102,188 +1397,9 @@ void concavePolygonFromAlphaImage( Polygon &P, string imageName, float resize )
       }
     }
 
-    floodFill1( filled, data, width, height );
+    int sideCount = floodFill1( filled, data, width, height );
 
-    int fillN = 3;
-
-    for( int p = 0; p < width*height; ++p )
-    {
-      if( filled[p] < 2 )
-      {
-        filled[p] = fillN;
-        floodFill2( filled, width, height, p, fillN );
-        ++fillN;
-      }
-    }
-
-    vector< int > count( fillN, 0 );
-
-    for( int p = 0; p < width*height; ++p )
-    {
-      ++count[filled[p]];
-    }
-
-    int maxCount = 0;
-    int bestFill = 0;
-
-    for( int k1 = 3; k1 < count.size(); ++k1 )
-    {
-      if( count[k1] > maxCount )
-      {
-        maxCount = count[k1];
-        bestFill = k1;
-      }
-    }
-
-    bool *valid = new bool[4*width*height];
-
-    for( int p = 0; p < width*height; ++p )
-    {
-      valid[p] = false;
-    }
-
-    for( int i = 0, p = 0; i < height; ++i )
-    {
-      for( int j = 0; j < width; ++j, ++p )
-      {
-        bool g = filled[p] == bestFill;
-
-        valid[p] = g;
-      }
-    }
-
-    int minX = 1000000000;
-    int maxX = 0;
-    
-    int minY = 1000000000;
-    int maxY = 0;
-    
-    for( int i = 0, p = 0; i < height; ++i )
-    {
-      for( int j = 0; j < width; ++j, ++p )
-      {
-        if( valid[p] )
-        {
-          minX = min(minX,j);
-          maxX = max(maxX,j);
-          minY = min(minY,i);
-          maxY = max(maxY,i);
-        }
-      }
-    }
-
-    for( int i = 0, p = 0; i < height; ++i )
-    {
-      for( int j = 0; j < width; ++j, ++p )
-      {
-        bool g = filled[p] == bestFill;
-
-        valid[(2*i+0)*2*width+2*j+0] = g;
-        valid[(2*i+1)*2*width+2*j+0] = g;
-        valid[(2*i+0)*2*width+2*j+1] = g;
-        valid[(2*i+1)*2*width+2*j+1] = g;
-      }
-    }
-
-    width*=2;
-    height*=2;
-
-
-    minX = 1000000000;
-    maxX = 0;
-    
-    minY = 1000000000;
-    maxY = 0;
-    
-    for( int i = 0, p = 0; i < height; ++i )
-    {
-      for( int j = 0; j < width; ++j, ++p )
-      {
-        if( valid[p] )
-        {
-          minX = min(minX,j);
-          maxX = max(maxX,j);
-          minY = min(minY,i);
-          maxY = max(maxY,i);
-        }
-      }
-    }
-
-    int direction = 0;
-
-    int dOffsets[4][2] = {
-      {1,0},
-      {0,1},
-      {-1,0},
-      {0,-1}
-    };
-
-    int px, py;
-
-    for( int p = 0; p < width*height; ++p )
-    {
-      if( valid[p] )
-      {
-        px = p % width;
-        py = p / width;
-
-        break;
-      }
-    }
-
-    int ipx = px;
-    int ipy = py;
-    int npx=-1, npy=-1;
-
-    while( npx != ipx || npy != ipy )
-    {
-      for( ; ; direction=(direction+1)%4 )
-      {
-        npx = px+dOffsets[direction][0];
-        npy = py+dOffsets[direction][1];
-        if( valid[ npy*width + npx ] )
-        {
-          break;
-        }
-      }
-
-      direction = (direction+3)%4;
-
-      vertices.push_back( Vertex(px,py) );
-      vertices.push_back( Vertex(npx,npy) );
-      edges.push_back( Edge( vertices.size()-2, vertices.size()-1 ) );
-
-      px = npx;
-      py = npy;
-    }
-
-    for( int k1 = 0; k1 < edges.size(); ++k1 )
-    {
-      for( int k2 = k1+1; k2 < edges.size(); ++k2 )
-      {
-        if( ( vertices[ edges[k1].v1 ] == vertices[ edges[k2].v1 ] && vertices[ edges[k1].v2 ] == vertices[ edges[k2].v2 ] ) || ( vertices[ edges[k1].v1 ] == vertices[ edges[k2].v2 ] && vertices[ edges[k1].v2 ] == vertices[ edges[k2].v1 ] ) )
-        {
-          edges.erase( edges.begin() + k2 );
-          edges.erase( edges.begin() + k1 );
-          --k1;
-          break;
-        }
-      }
-    }
-
-    delete[] filled;
-    delete[] valid;
-    delete[] data;
-
-    for( int i = 0; i < edges.size(); ++i )
-    {
-      Vertex v1 = vertices[edges[i].v1];
-      Vertex v2 = vertices[edges[i].v2];
-
-      P.addVertex(v1);
-      P.addVertex(v2);
-      P.addEdge(P.vertices.size()-2,P.vertices.size()-1);
-    }
+    concaveVertices( filled, P, width, height );
 
     Vertex origin = Vertex( -1000000, -1000000 );
 
@@ -1295,6 +1411,8 @@ void concavePolygonFromAlphaImage( Polygon &P, string imageName, float resize )
 
     P.offsetBy(origin);
     P.scaleBy(0.5);
+
+    delete[] data;
   }
   else
   {
@@ -1309,7 +1427,7 @@ void concavePolygonFromAlphaImage( Polygon &P, string imageName, float resize )
     P.addEdge(3,0);
   }
 
-  decimate(P,0.0000000001);
+  removeParallel(P);
 }
 
 void convexPolygonFromVertices( vector< Vertex > &vertices, Polygon &P )
@@ -1367,7 +1485,7 @@ void decimateHelper( Polygon &P, float epsilon )
 
       Vertex v3 = P.vertices[P.edges[j].v2];
 
-      if( distanceToLine( v2, v1, v3 ) <= epsilon && !(firstRemoved && j == 0 ) )
+      if( v2 == P.vertices[P.edges[j].v1] && distanceToLine( v2, v1, v3 ) <= epsilon && !(firstRemoved && j == 0 ) )
       {
         if( i == 0 ) firstRemoved = true;
         if( j == 0 ) edges.erase(edges.begin());
@@ -1393,11 +1511,9 @@ void decimateHelper( Polygon &P, float epsilon )
   }
 }
 
-void decimate( Polygon &P, float epsilon )
+void decimate2( Polygon &P, float epsilon )
 {
   float minLength = P.minLength();
-
-  P.scaleBy(1.0/minLength);
 
   decimateHelper(P,epsilon);
 
@@ -1413,6 +1529,38 @@ void decimate( Polygon &P, float epsilon )
     P.edges[i].v1 = indices[P.edges[i].v1];
     P.edges[i].v2 = indices[P.edges[i].v2];
   }
+}
 
-  P.scaleBy(minLength);
+void decimate( Polygon &P, float epsilon )
+{
+  Polygon P3;
+
+  for( int i = 0; i < P.edges.size(); )
+  {
+    Polygon P2;
+
+    for( ; i < P.edges.size(); ++i )
+    {
+      P2.addVertex(P.vertices[P.edges[i].v1]);
+      P2.addVertex(P.vertices[P.edges[i].v2]);
+      P2.addEdge(P2.vertices.size()-2,P2.vertices.size()-1);
+
+      if( i == P.edges.size()-1 || P.vertices[P.edges[i].v2] != P.vertices[P.edges[i+1].v1] )
+      {
+        ++i;
+        break;
+      }
+    }
+
+    decimate2( P2, epsilon );
+
+    for( int j = 0; j < P2.edges.size(); ++j )
+    {
+      P3.addVertex(P2.vertices[P2.edges[j].v1]);
+      P3.addVertex(P2.vertices[P2.edges[j].v2]);
+      P3.addEdge(P3.vertices.size()-2,P3.vertices.size()-1);
+    }
+  }
+
+  P = P3;
 }

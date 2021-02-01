@@ -66,7 +66,7 @@ void BestFitPolygon( string interiorName, string boundingName, string outputName
 
   decimate(R,decimateValue);
 
-  R.makeClockwise();
+//  R.makeClockwise();
 
 
 
